@@ -47,9 +47,9 @@ This app is ready to publish as a static GitHub Pages site.
 
 - Put the contents of this folder at the root of a GitHub repository.
 - Keep the `.nojekyll` file so GitHub Pages serves the static files directly.
+- This repo includes `.github/workflows/pages.yml` for GitHub Pages deployment with current GitHub Actions versions.
 - In the repository settings, open `Pages`.
-- Under `Build and deployment`, choose `Deploy from a branch`.
-- Select the `main` branch and the `/ (root)` folder.
+- Under `Build and deployment`, choose `GitHub Actions`.
 
 For a project site, the final URL will look like:
 
