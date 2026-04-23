@@ -1,4 +1,4 @@
-import { TRANSLATIONS } from "./translations.js?v=20260422g";
+import { TRANSLATIONS } from "./translations.js?v=20260422h";
 import {
   getStoredFullName,
   getStoredNameParts,
@@ -8,7 +8,7 @@ import {
   sanitizeEntry,
   setStoredName,
   writeLanguage
-} from "./storage.js?v=20260422g";
+} from "./storage.js?v=20260422h";
 import {
   copyText,
   formatDate,
@@ -18,21 +18,22 @@ import {
   registerServiceWorker,
   sortEntriesAsc,
   sortEntriesDesc
-} from "./utils.js?v=20260422g";
+} from "./utils.js?v=20260422h";
 
 const SCREEN_INDEX = {
   home: 0,
   date: 1,
   hours: 2,
   note: 3,
-  confirm: 4,
-  send: 5
+  confirm: 4
 };
 
 const state = {
   lang: readLanguage(TRANSLATIONS, "en"),
   entries: sortEntriesDesc(loadEntries()),
   selectedMonthKey: getCurrentMonthKey(),
+  expandedEntryId: null,
+  sendSheetOpen: false,
   currentScreen: SCREEN_INDEX.home,
   draft: createEmptyDraft(),
   editingEntryId: null,
@@ -60,6 +61,9 @@ const dom = {
   nameOverlay: document.getElementById("nameOverlay"),
   firstName: document.getElementById("firstName"),
   lastName: document.getElementById("lastName"),
+  sheetBackdrop: document.getElementById("sheetBackdrop"),
+  sendSheet: document.getElementById("sendSheet"),
+  closeSendButton: document.getElementById("closeSendButton"),
   reportBox: document.getElementById("reportBox"),
   saveEntryButton: document.getElementById("saveEntryButton"),
   toast: document.getElementById("toast"),
@@ -70,13 +74,18 @@ const dom = {
 };
 
 let toastTimer = null;
-const holdHintTimers = new WeakMap();
+const pressHintTimers = new WeakMap();
+let viewportTimer = null;
 
 bindEvents();
 initialize();
 
 function createEmptyDraft() {
   return { date: "", hours: 0, note: "" };
+}
+
+function useCompactMonthLabels() {
+  return window.matchMedia("(max-width: 430px)").matches;
 }
 
 function createSvgIcon(paths, viewBox = "0 0 16 16") {
@@ -129,10 +138,10 @@ function getAvailableMonthKeys(entries = state.entries) {
   return Array.from(new Set(entries.map(getEntryMonthKey))).sort((left, right) => right.localeCompare(left));
 }
 
-function formatMonthKey(monthKey) {
+function formatMonthKey(monthKey, monthStyle = "long") {
   const [year, month] = monthKey.split("-").map(Number);
   return new Intl.DateTimeFormat(translate("locale"), {
-    month: "long",
+    month: monthStyle,
     year: "numeric"
   }).format(new Date(year, month - 1, 1));
 }
@@ -183,7 +192,8 @@ function bindEvents() {
   document.getElementById("backFromHoursButton").addEventListener("click", goBack);
   document.getElementById("backFromNoteButton").addEventListener("click", goBack);
   document.getElementById("backFromConfirmButton").addEventListener("click", goBack);
-  document.getElementById("backFromSendButton").addEventListener("click", () => goTo(SCREEN_INDEX.home));
+  dom.closeSendButton.addEventListener("click", closeSendSheet);
+  dom.sheetBackdrop.addEventListener("click", closeSendSheet);
 
   document.querySelectorAll("[data-minutes]").forEach((button) => {
     button.addEventListener("click", () => selectMinutes(Number(button.dataset.minutes)));
@@ -195,19 +205,24 @@ function bindEvents() {
 
   dom.firstName.addEventListener("keydown", handleNameSubmitKey);
   dom.lastName.addEventListener("keydown", handleNameSubmitKey);
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && state.sendSheetOpen) {
+      closeSendSheet();
+    }
+  });
+
+  window.addEventListener("resize", handleViewportChange);
 }
 
-function bindHoldHint(element, translationKey) {
-  element.title = translate(translationKey);
-  element.dataset.holdKey = translationKey;
-
+function bindPressHint(element, getMessage) {
   let suppressClick = false;
 
-  const cancelHold = () => {
-    const timer = holdHintTimers.get(element);
+  const cancelHint = () => {
+    const timer = pressHintTimers.get(element);
     if (timer) {
       window.clearTimeout(timer);
-      holdHintTimers.delete(element);
+      pressHintTimers.delete(element);
     }
   };
 
@@ -216,16 +231,19 @@ function bindHoldHint(element, translationKey) {
       return;
     }
 
-    cancelHold();
+    cancelHint();
     const timer = window.setTimeout(() => {
       suppressClick = true;
-      showToast(translate(translationKey));
+      const message = typeof getMessage === "function" ? getMessage() : getMessage;
+      if (message) {
+        showToast(message);
+      }
     }, 420);
-    holdHintTimers.set(element, timer);
+    pressHintTimers.set(element, timer);
   });
 
   ["pointerup", "pointerleave", "pointercancel", "pointermove"].forEach((eventName) => {
-    element.addEventListener(eventName, cancelHold);
+    element.addEventListener(eventName, cancelHint);
   });
 
   element.addEventListener("click", (event) => {
@@ -237,6 +255,111 @@ function bindHoldHint(element, translationKey) {
     event.stopImmediatePropagation();
     suppressClick = false;
   }, true);
+}
+
+function bindEntryGestures(surface, row, entry) {
+  let pointerId = null;
+  let startX = 0;
+  let startY = 0;
+  let shiftX = 0;
+  let tracking = false;
+  let swiping = false;
+  let suppressClick = false;
+
+  const resetSwipe = () => {
+    shiftX = 0;
+    tracking = false;
+    swiping = false;
+    pointerId = null;
+    row.style.removeProperty("--swipe-shift");
+    row.classList.remove("swiping-left", "swiping-right");
+  };
+
+  surface.addEventListener("pointerdown", (event) => {
+    if (event.pointerType !== "touch") {
+      return;
+    }
+
+    tracking = true;
+    swiping = false;
+    suppressClick = false;
+    pointerId = event.pointerId;
+    startX = event.clientX;
+    startY = event.clientY;
+    shiftX = 0;
+    surface.setPointerCapture(event.pointerId);
+  });
+
+  surface.addEventListener("pointermove", (event) => {
+    if (!tracking || event.pointerId !== pointerId) {
+      return;
+    }
+
+    const deltaX = event.clientX - startX;
+    const deltaY = event.clientY - startY;
+
+    if (!swiping) {
+      if (Math.abs(deltaY) > 14 && Math.abs(deltaY) > Math.abs(deltaX)) {
+        if (pointerId !== null && surface.hasPointerCapture(pointerId)) {
+          surface.releasePointerCapture(pointerId);
+        }
+        resetSwipe();
+        return;
+      }
+
+      if (Math.abs(deltaX) < 12) {
+        return;
+      }
+
+      swiping = true;
+      suppressClick = true;
+    }
+
+    shiftX = Math.max(-90, Math.min(90, deltaX));
+    row.style.setProperty("--swipe-shift", `${shiftX}px`);
+    row.classList.toggle("swiping-right", shiftX > 12);
+    row.classList.toggle("swiping-left", shiftX < -12);
+  });
+
+  const finishSwipe = (event) => {
+    if (!tracking || event.pointerId !== pointerId) {
+      return;
+    }
+
+    if (surface.hasPointerCapture(event.pointerId)) {
+      surface.releasePointerCapture(event.pointerId);
+    }
+
+    const finalShift = shiftX;
+    resetSwipe();
+
+    if (finalShift >= 72) {
+      suppressClick = true;
+      openEditFlow(entry.id);
+      return;
+    }
+
+    if (finalShift <= -72) {
+      suppressClick = true;
+      deleteEntry(entry.id);
+    }
+  };
+
+  surface.addEventListener("pointerup", finishSwipe);
+  surface.addEventListener("pointercancel", finishSwipe);
+
+  surface.addEventListener("click", (event) => {
+    if (suppressClick) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      suppressClick = false;
+      return;
+    }
+
+    if (entry.note) {
+      toggleExpandedEntry(entry.id);
+    }
+  });
 }
 
 function initialize() {
@@ -293,7 +416,7 @@ function applyLanguage() {
     populateConfirmation();
   }
 
-  if (state.currentScreen === SCREEN_INDEX.send) {
+  if (state.sendSheetOpen) {
     renderReport();
   }
 }
@@ -325,12 +448,16 @@ function selectMonth(monthKey) {
   state.selectedMonthKey = monthKey;
   renderHome();
 
-  if (state.currentScreen === SCREEN_INDEX.send) {
+  if (state.sendSheetOpen) {
     renderReport();
   }
 }
 
 function goTo(index) {
+  if (state.sendSheetOpen) {
+    closeSendSheet();
+  }
+
   state.currentScreen = index;
   dom.slider.style.transform = `translateX(-${index * 100}vw)`;
 
@@ -350,6 +477,7 @@ function goBack() {
 }
 
 function startFlow() {
+  closeSendSheet();
   resetEntryFlowState();
   dom.inputDate.value = getLocalDateInputValue(new Date());
   dom.inputNote.value = "";
@@ -395,6 +523,7 @@ function openEditFlow(id) {
     return;
   }
 
+  closeSendSheet();
   state.editingEntryId = entry.id;
   state.draft = {
     date: entry.date,
@@ -443,6 +572,11 @@ function goToConfirm() {
   state.draft.note = dom.inputNote.value.trim().slice(0, 240);
   populateConfirmation();
   goTo(SCREEN_INDEX.confirm);
+}
+
+function toggleExpandedEntry(id) {
+  state.expandedEntryId = state.expandedEntryId === id ? null : id;
+  renderHome();
 }
 
 function populateConfirmation() {
@@ -496,6 +630,7 @@ function saveEntry() {
   }
 
   state.selectedMonthKey = getEntryMonthKey(entry);
+  state.expandedEntryId = entry.id;
   persistEntries(state.entries);
   renderHome();
   showToast(translate(editing ? "updated" : "saved"));
@@ -538,6 +673,7 @@ function renderHome() {
 
 function renderMonthFilter() {
   const availableMonthKeys = getAvailableMonthKeys();
+  const compactLabels = useCompactMonthLabels();
   dom.monthFilter.replaceChildren();
   dom.monthFilterWrap.hidden = availableMonthKeys.length <= 1;
 
@@ -547,21 +683,44 @@ function renderMonthFilter() {
 
   const fragment = document.createDocumentFragment();
   availableMonthKeys.forEach((monthKey) => {
+    const fullLabel = formatMonthKey(monthKey);
+    const compactLabel = formatMonthKey(monthKey, "short");
+    const visibleLabel = compactLabels ? compactLabel : fullLabel;
     const button = document.createElement("button");
     button.className = "month-chip";
     button.type = "button";
-    button.textContent = formatMonthKey(monthKey);
-    button.setAttribute("aria-label", formatMonthKey(monthKey));
+    button.textContent = visibleLabel;
+    button.setAttribute("aria-label", fullLabel);
+    button.title = fullLabel;
     button.classList.toggle("active", monthKey === state.selectedMonthKey);
     button.addEventListener("click", () => selectMonth(monthKey));
+    if (compactLabels && compactLabel !== fullLabel) {
+      bindPressHint(button, () => fullLabel);
+    }
     fragment.appendChild(button);
   });
   dom.monthFilter.appendChild(fragment);
 }
 
 function createEntryRow(entry) {
-  const row = document.createElement("div");
+  const row = document.createElement("article");
   row.className = "entry-row";
+  row.dataset.swipeStart = translate("edit_entry");
+  row.dataset.swipeEnd = translate("delete_entry");
+  row.classList.toggle("expanded", state.expandedEntryId === entry.id);
+
+  const swipeSurface = document.createElement("div");
+  swipeSurface.className = "entry-swipe-surface";
+
+  const main = document.createElement("button");
+  main.className = "entry-main";
+  main.type = "button";
+  main.setAttribute("aria-expanded", String(Boolean(entry.note) && state.expandedEntryId === entry.id));
+  main.setAttribute("aria-label", `${formatDate(translate("locale"), entry.date, {
+    month: "short",
+    day: "numeric",
+    weekday: "short"
+  })} ${formatHours(entry.hours)}`);
 
   const date = document.createElement("span");
   date.className = "entry-date";
@@ -575,9 +734,13 @@ function createEntryRow(entry) {
   hours.className = "entry-hrs";
   hours.textContent = formatHours(entry.hours);
 
-  const note = document.createElement("span");
-  note.className = "entry-note";
-  note.textContent = entry.note || "";
+  const preview = document.createElement("span");
+  preview.className = "entry-preview";
+  preview.textContent = entry.note || "";
+  if (entry.note) {
+    preview.title = entry.note;
+    bindPressHint(main, () => entry.note);
+  }
 
   const actions = document.createElement("div");
   actions.className = "entry-actions";
@@ -587,7 +750,7 @@ function createEntryRow(entry) {
   editButton.type = "button";
   editButton.setAttribute("aria-label", translate("edit_entry"));
   editButton.appendChild(createEntryActionIcon("edit"));
-  bindHoldHint(editButton, "edit_entry");
+  bindPressHint(editButton, () => translate("edit_entry"));
   editButton.addEventListener("click", () => openEditFlow(entry.id));
 
   const removeButton = document.createElement("button");
@@ -595,11 +758,23 @@ function createEntryRow(entry) {
   removeButton.type = "button";
   removeButton.setAttribute("aria-label", translate("delete_entry"));
   removeButton.appendChild(createEntryActionIcon("delete"));
-  bindHoldHint(removeButton, "delete_entry");
+  bindPressHint(removeButton, () => translate("delete_entry"));
   removeButton.addEventListener("click", () => deleteEntry(entry.id));
 
+  main.append(date, hours, preview);
   actions.append(editButton, removeButton);
-  row.append(date, hours, note, actions);
+
+  swipeSurface.append(main, actions);
+  row.appendChild(swipeSurface);
+
+  if (entry.note) {
+    const details = document.createElement("div");
+    details.className = "entry-details";
+    details.textContent = entry.note;
+    row.appendChild(details);
+  }
+
+  bindEntryGestures(main, row, entry);
   return row;
 }
 
@@ -609,10 +784,17 @@ function deleteEntry(id) {
   }
 
   state.entries = state.entries.filter((entry) => entry.id !== id);
+  if (state.expandedEntryId === id) {
+    state.expandedEntryId = null;
+  }
   persistEntries(state.entries);
   renderHome();
 
-  if (state.currentScreen === SCREEN_INDEX.send) {
+  if (state.sendSheetOpen) {
+    if (!getSelectedMonthEntries().length) {
+      closeSendSheet();
+      return;
+    }
     renderReport();
   }
 }
@@ -624,7 +806,21 @@ function openSend() {
   }
 
   renderReport();
-  goTo(SCREEN_INDEX.send);
+  state.sendSheetOpen = true;
+  document.body.classList.add("sheet-open");
+  dom.sheetBackdrop.setAttribute("aria-hidden", "false");
+  dom.sendSheet.setAttribute("aria-hidden", "false");
+}
+
+function closeSendSheet() {
+  if (!state.sendSheetOpen) {
+    return;
+  }
+
+  state.sendSheetOpen = false;
+  document.body.classList.remove("sheet-open");
+  dom.sheetBackdrop.setAttribute("aria-hidden", "true");
+  dom.sendSheet.setAttribute("aria-hidden", "true");
 }
 
 function cancelEntryFlow() {
@@ -774,4 +970,14 @@ function handleNameSubmitKey(event) {
     event.preventDefault();
     submitName();
   }
+}
+
+function handleViewportChange() {
+  window.clearTimeout(viewportTimer);
+  viewportTimer = window.setTimeout(() => {
+    renderHome();
+    if (state.sendSheetOpen) {
+      renderReport();
+    }
+  }, 80);
 }
