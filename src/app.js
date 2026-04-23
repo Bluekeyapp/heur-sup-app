@@ -1,4 +1,4 @@
-import { TRANSLATIONS } from "./translations.js?v=20260422j";
+import { TRANSLATIONS } from "./translations.js?v=20260422k";
 import {
   getStoredFullName,
   getStoredNameParts,
@@ -8,7 +8,7 @@ import {
   sanitizeEntry,
   setStoredName,
   writeLanguage
-} from "./storage.js?v=20260422j";
+} from "./storage.js?v=20260422k";
 import {
   copyText,
   formatDate,
@@ -18,7 +18,7 @@ import {
   registerServiceWorker,
   sortEntriesAsc,
   sortEntriesDesc
-} from "./utils.js?v=20260422j";
+} from "./utils.js?v=20260422k";
 
 const SCREEN_INDEX = {
   home: 0,
@@ -117,6 +117,17 @@ function formatEntryMeta(entry) {
   const day = parts.find((part) => part.type === "day")?.value || "";
   const month = parts.find((part) => part.type === "month")?.value || "";
   return `${formatHours(entry.hours)} ${day} ${month}`.trim();
+}
+
+function formatEntryDayMonth(entry) {
+  const parts = new Intl.DateTimeFormat(translate("locale"), {
+    day: "numeric",
+    month: "short"
+  }).formatToParts(new Date(`${entry.date}T00:00:00`));
+
+  const day = parts.find((part) => part.type === "day")?.value || "";
+  const month = parts.find((part) => part.type === "month")?.value || "";
+  return `${day} ${month}`.trim();
 }
 
 function getSelectedMonthEntries() {
@@ -692,8 +703,15 @@ function createEntryRow(entry) {
   main.setAttribute("aria-label", formatEntryMeta(entry));
 
   const meta = document.createElement("span");
-  meta.className = "entry-date";
-  meta.textContent = formatEntryMeta(entry);
+  meta.className = "entry-meta";
+
+  const hours = document.createElement("span");
+  hours.className = "entry-hrs";
+  hours.textContent = formatHours(entry.hours);
+
+  const date = document.createElement("span");
+  date.className = "entry-date";
+  date.textContent = formatEntryDayMonth(entry);
 
   const preview = document.createElement("span");
   preview.className = "entry-preview";
@@ -703,6 +721,7 @@ function createEntryRow(entry) {
     bindPressHint(main, () => entry.note);
   }
 
+  meta.append(hours, date);
   main.append(meta, preview);
   swipeSurface.appendChild(main);
   row.appendChild(swipeSurface);

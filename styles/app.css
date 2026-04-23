@@ -405,7 +405,7 @@ input[type="date"].big-input {
 .entry-main {
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: start;
   gap: 12px;
   border: none;
@@ -416,10 +416,26 @@ input[type="date"].big-input {
   touch-action: pan-y;
 }
 
+.entry-meta {
+  min-width: 0;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+}
+
 .entry-date {
   min-width: 0;
   color: var(--subtle);
   font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.entry-hrs {
+  min-width: 0;
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -890,6 +906,10 @@ body.sheet-open .sheet {
     grid-template-columns: 1fr;
     align-items: start;
     row-gap: 6px;
+  }
+
+  .entry-meta {
+    gap: 6px;
   }
 
   .entry-date {

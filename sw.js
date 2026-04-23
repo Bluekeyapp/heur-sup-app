@@ -1,4 +1,4 @@
-const CACHE_NAME = "heur-sup-app-v11";
+const CACHE_NAME = "heur-sup-app-v12";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -8,13 +8,13 @@ const APP_SHELL = [
   "./src/storage.js",
   "./src/utils.js",
   "./manifest.webmanifest",
-  "./index.html?v=20260422j",
-  "./styles/app.css?v=20260422j",
-  "./src/app.js?v=20260422j",
-  "./src/translations.js?v=20260422j",
-  "./src/storage.js?v=20260422j",
-  "./src/utils.js?v=20260422j",
-  "./manifest.webmanifest?v=20260422j",
+  "./index.html?v=20260422k",
+  "./styles/app.css?v=20260422k",
+  "./src/app.js?v=20260422k",
+  "./src/translations.js?v=20260422k",
+  "./src/storage.js?v=20260422k",
+  "./src/utils.js?v=20260422k",
+  "./manifest.webmanifest?v=20260422k",
   "./assets/icon.svg",
   "./assets/icon-maskable.svg"
 ];
