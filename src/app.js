@@ -1,4 +1,4 @@
-import { TRANSLATIONS } from "./translations.js?v=20260422i";
+import { TRANSLATIONS } from "./translations.js?v=20260422j";
 import {
   getStoredFullName,
   getStoredNameParts,
@@ -8,7 +8,7 @@ import {
   sanitizeEntry,
   setStoredName,
   writeLanguage
-} from "./storage.js?v=20260422i";
+} from "./storage.js?v=20260422j";
 import {
   copyText,
   formatDate,
@@ -18,7 +18,7 @@ import {
   registerServiceWorker,
   sortEntriesAsc,
   sortEntriesDesc
-} from "./utils.js?v=20260422i";
+} from "./utils.js?v=20260422j";
 
 const SCREEN_INDEX = {
   home: 0,
@@ -106,6 +106,17 @@ function formatMonthKey(monthKey, monthStyle = "long") {
     month: monthStyle,
     year: "numeric"
   }).format(new Date(year, month - 1, 1));
+}
+
+function formatEntryMeta(entry) {
+  const parts = new Intl.DateTimeFormat(translate("locale"), {
+    day: "numeric",
+    month: "short"
+  }).formatToParts(new Date(`${entry.date}T00:00:00`));
+
+  const day = parts.find((part) => part.type === "day")?.value || "";
+  const month = parts.find((part) => part.type === "month")?.value || "";
+  return `${formatHours(entry.hours)} ${day} ${month}`.trim();
 }
 
 function getSelectedMonthEntries() {
@@ -678,23 +689,11 @@ function createEntryRow(entry) {
   main.className = "entry-main";
   main.type = "button";
   main.setAttribute("aria-expanded", String(Boolean(entry.note) && state.expandedEntryId === entry.id));
-  main.setAttribute("aria-label", `${formatDate(translate("locale"), entry.date, {
-    month: "short",
-    day: "numeric",
-    weekday: "short"
-  })} ${formatHours(entry.hours)}`);
+  main.setAttribute("aria-label", formatEntryMeta(entry));
 
-  const date = document.createElement("span");
-  date.className = "entry-date";
-  date.textContent = formatDate(translate("locale"), entry.date, {
-    month: "short",
-    day: "numeric",
-    weekday: "short"
-  });
-
-  const hours = document.createElement("span");
-  hours.className = "entry-hrs";
-  hours.textContent = formatHours(entry.hours);
+  const meta = document.createElement("span");
+  meta.className = "entry-date";
+  meta.textContent = formatEntryMeta(entry);
 
   const preview = document.createElement("span");
   preview.className = "entry-preview";
@@ -704,7 +703,7 @@ function createEntryRow(entry) {
     bindPressHint(main, () => entry.note);
   }
 
-  main.append(date, hours, preview);
+  main.append(meta, preview);
   swipeSurface.appendChild(main);
   row.appendChild(swipeSurface);
 

@@ -405,8 +405,8 @@ input[type="date"].big-input {
 .entry-main {
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(76px, auto) auto minmax(0, 1fr);
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
   gap: 12px;
   border: none;
   background: none;
@@ -420,13 +420,6 @@ input[type="date"].big-input {
   min-width: 0;
   color: var(--subtle);
   font-size: 0.85rem;
-  white-space: nowrap;
-}
-
-.entry-hrs {
-  min-width: 52px;
-  font-size: 1.05rem;
-  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -894,7 +887,7 @@ body.sheet-open .sheet {
   }
 
   .entry-main {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 1fr;
     align-items: start;
     row-gap: 6px;
   }
@@ -903,13 +896,8 @@ body.sheet-open .sheet {
     grid-column: 1;
   }
 
-  .entry-hrs {
-    grid-column: 2;
-    justify-self: end;
-  }
-
   .entry-preview {
-    grid-column: 1 / -1;
+    grid-column: 1;
     line-height: 1.4;
   }
 
