@@ -393,25 +393,35 @@ input[type="date"].big-input {
 .entry-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-shrink: 0;
   justify-self: end;
 }
 
 .entry-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   background: var(--panel);
   color: var(--muted);
-  padding: 8px 10px;
-  border-radius: 10px;
-  font-size: 0.78rem;
-  font-weight: 600;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 12px;
   transition: background-color 0.15s, color 0.15s;
 }
 
 .entry-action-btn:active {
   background: #2a2a2a;
   color: #ffffff;
+}
+
+.entry-action-btn svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  pointer-events: none;
 }
 
 .edit-entry-btn,
@@ -777,8 +787,8 @@ input[type="date"].big-input {
   }
 
   .entry-action-btn {
-    padding: 9px 12px;
-    min-height: 38px;
+    width: 36px;
+    height: 36px;
   }
 
   .action-row,

@@ -1,4 +1,4 @@
-import { TRANSLATIONS } from "./translations.js?v=20260422f";
+import { TRANSLATIONS } from "./translations.js?v=20260422g";
 import {
   getStoredFullName,
   getStoredNameParts,
@@ -8,7 +8,7 @@ import {
   sanitizeEntry,
   setStoredName,
   writeLanguage
-} from "./storage.js?v=20260422f";
+} from "./storage.js?v=20260422g";
 import {
   copyText,
   formatDate,
@@ -18,7 +18,7 @@ import {
   registerServiceWorker,
   sortEntriesAsc,
   sortEntriesDesc
-} from "./utils.js?v=20260422f";
+} from "./utils.js?v=20260422g";
 
 const SCREEN_INDEX = {
   home: 0,
@@ -70,12 +70,51 @@ const dom = {
 };
 
 let toastTimer = null;
+const holdHintTimers = new WeakMap();
 
 bindEvents();
 initialize();
 
 function createEmptyDraft() {
   return { date: "", hours: 0, note: "" };
+}
+
+function createSvgIcon(paths, viewBox = "0 0 16 16") {
+  const svgNamespace = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNamespace, "svg");
+  svg.setAttribute("viewBox", viewBox);
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "1.8");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  svg.setAttribute("aria-hidden", "true");
+
+  paths.forEach(({ tag, attributes }) => {
+    const node = document.createElementNS(svgNamespace, tag);
+    Object.entries(attributes).forEach(([key, value]) => {
+      node.setAttribute(key, value);
+    });
+    svg.appendChild(node);
+  });
+
+  return svg;
+}
+
+function createEntryActionIcon(kind) {
+  if (kind === "edit") {
+    return createSvgIcon([
+      { tag: "path", attributes: { d: "M11.5 2.5a2.121 2.121 0 0 1 3 3L5 15H1v-4L11.5 2.5z" } }
+    ]);
+  }
+
+  return createSvgIcon([
+    { tag: "polyline", attributes: { points: "3,4 13,4" } },
+    { tag: "path", attributes: { d: "M5 4V2.8C5 2.358 5.358 2 5.8 2h4.4C10.642 2 11 2.358 11 2.8V4" } },
+    { tag: "path", attributes: { d: "M4.2 4l.6 8.2c.05.74.666 1.31 1.408 1.31h3.584c.742 0 1.358-.57 1.408-1.31L11.8 4" } },
+    { tag: "line", attributes: { x1: "6.6", y1: "6.6", x2: "6.6", y2: "11.2" } },
+    { tag: "line", attributes: { x1: "9.4", y1: "6.6", x2: "9.4", y2: "11.2" } }
+  ]);
 }
 
 function getCurrentMonthKey() {
@@ -156,6 +195,48 @@ function bindEvents() {
 
   dom.firstName.addEventListener("keydown", handleNameSubmitKey);
   dom.lastName.addEventListener("keydown", handleNameSubmitKey);
+}
+
+function bindHoldHint(element, translationKey) {
+  element.title = translate(translationKey);
+  element.dataset.holdKey = translationKey;
+
+  let suppressClick = false;
+
+  const cancelHold = () => {
+    const timer = holdHintTimers.get(element);
+    if (timer) {
+      window.clearTimeout(timer);
+      holdHintTimers.delete(element);
+    }
+  };
+
+  element.addEventListener("pointerdown", (event) => {
+    if (event.pointerType !== "touch") {
+      return;
+    }
+
+    cancelHold();
+    const timer = window.setTimeout(() => {
+      suppressClick = true;
+      showToast(translate(translationKey));
+    }, 420);
+    holdHintTimers.set(element, timer);
+  });
+
+  ["pointerup", "pointerleave", "pointercancel", "pointermove"].forEach((eventName) => {
+    element.addEventListener(eventName, cancelHold);
+  });
+
+  element.addEventListener("click", (event) => {
+    if (!suppressClick) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    suppressClick = false;
+  }, true);
 }
 
 function initialize() {
@@ -504,15 +585,17 @@ function createEntryRow(entry) {
   const editButton = document.createElement("button");
   editButton.className = "entry-action-btn edit-entry-btn";
   editButton.type = "button";
-  editButton.textContent = translate("edit_entry");
   editButton.setAttribute("aria-label", translate("edit_entry"));
+  editButton.appendChild(createEntryActionIcon("edit"));
+  bindHoldHint(editButton, "edit_entry");
   editButton.addEventListener("click", () => openEditFlow(entry.id));
 
   const removeButton = document.createElement("button");
   removeButton.className = "entry-action-btn del-btn";
   removeButton.type = "button";
-  removeButton.textContent = translate("delete_entry");
   removeButton.setAttribute("aria-label", translate("delete_entry"));
+  removeButton.appendChild(createEntryActionIcon("delete"));
+  bindHoldHint(removeButton, "delete_entry");
   removeButton.addEventListener("click", () => deleteEntry(entry.id));
 
   actions.append(editButton, removeButton);
