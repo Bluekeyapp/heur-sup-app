@@ -398,11 +398,13 @@ input[type="date"].big-input {
 
 .entry-swipe-surface {
   display: block;
+  width: 100%;
   transform: translateX(var(--swipe-shift));
   transition: transform 0.16s ease;
 }
 
 .entry-main {
+  width: 100%;
   min-width: 0;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -446,6 +448,7 @@ input[type="date"].big-input {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-height: 1.25rem;
 }
 
 .entry-details {
