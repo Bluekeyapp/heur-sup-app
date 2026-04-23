@@ -1,4 +1,4 @@
-import { TRANSLATIONS } from "./translations.js?v=20260422l";
+import { TRANSLATIONS } from "./translations.js?v=20260422m";
 import {
   getStoredFullName,
   getStoredNameParts,
@@ -8,7 +8,7 @@ import {
   sanitizeEntry,
   setStoredName,
   writeLanguage
-} from "./storage.js?v=20260422l";
+} from "./storage.js?v=20260422m";
 import {
   copyText,
   formatDate,
@@ -18,7 +18,7 @@ import {
   registerServiceWorker,
   sortEntriesAsc,
   sortEntriesDesc
-} from "./utils.js?v=20260422l";
+} from "./utils.js?v=20260422m";
 
 const SCREEN_INDEX = {
   home: 0,
@@ -718,7 +718,6 @@ function createEntryRow(entry) {
   preview.textContent = entry.note || "";
   if (entry.note) {
     preview.title = entry.note;
-    bindPressHint(row, () => entry.note);
   }
 
   meta.append(hours, date);
@@ -733,7 +732,7 @@ function createEntryRow(entry) {
     row.appendChild(details);
   }
 
-  bindEntryGestures(row, row, entry);
+  bindEntryGestures(main, row, entry);
   return row;
 }
 
