@@ -1,4 +1,4 @@
-import { TRANSLATIONS } from "./translations.js?v=20260422h";
+import { TRANSLATIONS } from "./translations.js?v=20260422i";
 import {
   getStoredFullName,
   getStoredNameParts,
@@ -8,7 +8,7 @@ import {
   sanitizeEntry,
   setStoredName,
   writeLanguage
-} from "./storage.js?v=20260422h";
+} from "./storage.js?v=20260422i";
 import {
   copyText,
   formatDate,
@@ -18,7 +18,7 @@ import {
   registerServiceWorker,
   sortEntriesAsc,
   sortEntriesDesc
-} from "./utils.js?v=20260422h";
+} from "./utils.js?v=20260422i";
 
 const SCREEN_INDEX = {
   home: 0,
@@ -86,44 +86,6 @@ function createEmptyDraft() {
 
 function useCompactMonthLabels() {
   return window.matchMedia("(max-width: 430px)").matches;
-}
-
-function createSvgIcon(paths, viewBox = "0 0 16 16") {
-  const svgNamespace = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(svgNamespace, "svg");
-  svg.setAttribute("viewBox", viewBox);
-  svg.setAttribute("fill", "none");
-  svg.setAttribute("stroke", "currentColor");
-  svg.setAttribute("stroke-width", "1.8");
-  svg.setAttribute("stroke-linecap", "round");
-  svg.setAttribute("stroke-linejoin", "round");
-  svg.setAttribute("aria-hidden", "true");
-
-  paths.forEach(({ tag, attributes }) => {
-    const node = document.createElementNS(svgNamespace, tag);
-    Object.entries(attributes).forEach(([key, value]) => {
-      node.setAttribute(key, value);
-    });
-    svg.appendChild(node);
-  });
-
-  return svg;
-}
-
-function createEntryActionIcon(kind) {
-  if (kind === "edit") {
-    return createSvgIcon([
-      { tag: "path", attributes: { d: "M11.5 2.5a2.121 2.121 0 0 1 3 3L5 15H1v-4L11.5 2.5z" } }
-    ]);
-  }
-
-  return createSvgIcon([
-    { tag: "polyline", attributes: { points: "3,4 13,4" } },
-    { tag: "path", attributes: { d: "M5 4V2.8C5 2.358 5.358 2 5.8 2h4.4C10.642 2 11 2.358 11 2.8V4" } },
-    { tag: "path", attributes: { d: "M4.2 4l.6 8.2c.05.74.666 1.31 1.408 1.31h3.584c.742 0 1.358-.57 1.408-1.31L11.8 4" } },
-    { tag: "line", attributes: { x1: "6.6", y1: "6.6", x2: "6.6", y2: "11.2" } },
-    { tag: "line", attributes: { x1: "9.4", y1: "6.6", x2: "9.4", y2: "11.2" } }
-  ]);
 }
 
 function getCurrentMonthKey() {
@@ -742,29 +704,8 @@ function createEntryRow(entry) {
     bindPressHint(main, () => entry.note);
   }
 
-  const actions = document.createElement("div");
-  actions.className = "entry-actions";
-
-  const editButton = document.createElement("button");
-  editButton.className = "entry-action-btn edit-entry-btn";
-  editButton.type = "button";
-  editButton.setAttribute("aria-label", translate("edit_entry"));
-  editButton.appendChild(createEntryActionIcon("edit"));
-  bindPressHint(editButton, () => translate("edit_entry"));
-  editButton.addEventListener("click", () => openEditFlow(entry.id));
-
-  const removeButton = document.createElement("button");
-  removeButton.className = "entry-action-btn del-btn";
-  removeButton.type = "button";
-  removeButton.setAttribute("aria-label", translate("delete_entry"));
-  removeButton.appendChild(createEntryActionIcon("delete"));
-  bindPressHint(removeButton, () => translate("delete_entry"));
-  removeButton.addEventListener("click", () => deleteEntry(entry.id));
-
   main.append(date, hours, preview);
-  actions.append(editButton, removeButton);
-
-  swipeSurface.append(main, actions);
+  swipeSurface.appendChild(main);
   row.appendChild(swipeSurface);
 
   if (entry.note) {

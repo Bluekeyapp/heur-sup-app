@@ -397,10 +397,7 @@ input[type="date"].big-input {
 }
 
 .entry-swipe-surface {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
-  gap: 12px;
+  display: block;
   transform: translateX(var(--swipe-shift));
   transition: transform 0.16s ease;
 }
@@ -442,14 +439,6 @@ input[type="date"].big-input {
   text-overflow: ellipsis;
 }
 
-.entry-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  justify-self: end;
-}
-
 .entry-details {
   display: none;
   margin-top: 10px;
@@ -463,37 +452,6 @@ input[type="date"].big-input {
 
 .entry-row.expanded .entry-details {
   display: block;
-}
-
-.entry-action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: var(--panel);
-  color: var(--muted);
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  border-radius: 12px;
-  transition: background-color 0.15s, color 0.15s;
-}
-
-.entry-action-btn:active {
-  background: #2a2a2a;
-  color: #ffffff;
-}
-
-.entry-action-btn svg {
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
-  pointer-events: none;
-}
-
-.edit-entry-btn,
-.del-btn {
-  color: #9a9a9a;
 }
 
 .empty-msg {
@@ -935,10 +893,6 @@ body.sheet-open .sheet {
     font-size: 0.78rem;
   }
 
-  .entry-swipe-surface {
-    gap: 10px;
-  }
-
   .entry-main {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: start;
@@ -957,15 +911,6 @@ body.sheet-open .sheet {
   .entry-preview {
     grid-column: 1 / -1;
     line-height: 1.4;
-  }
-
-  .entry-actions {
-    flex-wrap: wrap;
-  }
-
-  .entry-action-btn {
-    width: 36px;
-    height: 36px;
   }
 
   .action-dock {
