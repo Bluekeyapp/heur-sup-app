@@ -1,20 +1,14 @@
-const CACHE_NAME = "heur-sup-app-v28";
+const CACHE_NAME = "heur-sup-app-v32";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles/app.css",
-  "./src/app.js",
-  "./src/translations.js",
-  "./src/storage.js",
-  "./src/utils.js",
-  "./manifest.webmanifest",
-  "./index.html?v=20260513c",
-  "./styles/app.css?v=20260513c",
-  "./src/app.js?v=20260513c",
-  "./src/translations.js?v=20260513c",
-  "./src/storage.js?v=20260513c",
-  "./src/utils.js?v=20260513c",
-  "./manifest.webmanifest?v=20260513c",
+  "./index.html?v=20260513g",
+  "./styles/app.css?v=20260513g",
+  "./src/app.js?v=20260513g",
+  "./src/translations.js?v=20260513g",
+  "./src/storage.js?v=20260513g",
+  "./src/utils.js?v=20260513g",
+  "./manifest.webmanifest?v=20260513g",
   "./assets/icon.svg",
   "./assets/icon-maskable.svg"
 ];
@@ -58,22 +52,7 @@ self.addEventListener("fetch", (event) => {
         return networkResponse;
       })
       .catch(() => caches.match(event.request).then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-
-        return fetch(event.request)
-        .then((networkResponse) => {
-          if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === "opaque") {
-            return networkResponse;
-          }
-
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-          return networkResponse;
-        });
+        return cachedResponse || caches.match("./index.html");
       }))
   );
 });

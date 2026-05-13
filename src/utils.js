@@ -17,7 +17,6 @@ export function sortEntriesAsc(entries) {
 }
 
 const REPORT_LOCALE = "fr-FR";
-const REPORT_TITLE = "Rapport d’heures supplémentaires";
 
 export function formatHours(hoursValue) {
   const totalMinutes = Math.round(hoursValue * 60);
@@ -49,10 +48,6 @@ export function formatFrenchReportMonth(monthKey) {
     month: "long",
     year: "numeric"
   }).format(new Date(year, month - 1, 1)));
-}
-
-export function formatFrenchReportSubject(monthKey) {
-  return `${REPORT_TITLE} - ${formatFrenchReportMonth(monthKey)}`;
 }
 
 export function formatFrenchReport({ entries, fullName = "", monthKey }) {

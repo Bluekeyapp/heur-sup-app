@@ -328,12 +328,7 @@ input[type="date"].big-input {
   stroke: currentColor;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 1.8;
-}
-
-.manage-entries-btn svg circle {
-  fill: currentColor;
-  stroke: none;
+  stroke-width: 2;
 }
 
 .manage-entries-btn.active {
@@ -408,50 +403,15 @@ input[type="date"].big-input {
 }
 
 .entry-row {
-  --swipe-shift: 0px;
   position: relative;
   padding: 14px 0;
   border-bottom: 1px solid var(--panel);
   overflow: hidden;
 }
 
-.entry-row::before,
-.entry-row::after {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-  pointer-events: none;
-}
-
-.entry-row::before {
-  content: attr(data-swipe-start);
-  left: 6px;
-  color: #6dc89f;
-}
-
-.entry-row::after {
-  content: attr(data-swipe-end);
-  right: 6px;
-  color: #ff8d8d;
-}
-
-.entry-row.swiping-right::before,
-.entry-row.swiping-left::after {
-  opacity: 1;
-}
-
-.entry-swipe-surface {
+.entry-surface {
   display: block;
   width: 100%;
-  transform: translateX(var(--swipe-shift));
-  transition: transform 0.16s ease;
-  touch-action: pan-y;
 }
 
 .entry-summary {
@@ -472,7 +432,6 @@ input[type="date"].big-input {
   color: inherit;
   padding: 0;
   text-align: left;
-  touch-action: pan-y;
 }
 
 .entry-actions {
@@ -494,7 +453,7 @@ input[type="date"].big-input {
   border-radius: 999px;
   background: var(--panel);
   color: var(--muted);
-  padding: 7px 0;
+  padding: 0;
   font-size: 0.72rem;
   font-weight: 700;
   line-height: 1;
@@ -1022,24 +981,9 @@ body.sheet-open .sheet {
     row-gap: 6px;
   }
 
-  .entry-summary {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-  }
-
-  .entry-actions {
-    justify-content: flex-start;
-  }
-
-  .entry-action {
-    padding-top: 8px;
-    padding-bottom: 8px;
-  }
-
   .entry-row.actions-open .entry-action {
     min-width: 58px;
-    padding-left: 11px;
-    padding-right: 11px;
+    padding: 8px 11px;
   }
 
   .entry-meta {
@@ -1193,9 +1137,7 @@ body.sheet-open .sheet {
   .toast,
   .sheet,
   .sheet-backdrop,
-  .entry-swipe-surface,
-  .entry-row::before,
-  .entry-row::after {
+  .entry-action {
     transition: none;
   }
 

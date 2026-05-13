@@ -4,7 +4,6 @@ import assert from "node:assert/strict";
 import {
   formatHours,
   formatFrenchReport,
-  formatFrenchReportSubject,
   getLocalDateInputValue,
   isValidDateValue,
   sortEntriesAsc,
@@ -69,8 +68,4 @@ test("formatFrenchReport produces a simple WhatsApp-readable French report", () 
     "• Samedi 25: 5H",
     "Note - Moving the dirt from one location to and other"
   ].join("\n"));
-});
-
-test("formatFrenchReportSubject always uses French", () => {
-  assert.equal(formatFrenchReportSubject("2026-04"), "Rapport d’heures supplémentaires - Avril 2026");
 });

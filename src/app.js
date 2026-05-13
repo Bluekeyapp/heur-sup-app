@@ -1,4 +1,4 @@
-import { TRANSLATIONS } from "./translations.js?v=20260513c";
+import { TRANSLATIONS } from "./translations.js?v=20260513g";
 import {
   getStoredFullName,
   getStoredNameParts,
@@ -8,7 +8,7 @@ import {
   sanitizeEntry,
   setStoredName,
   writeLanguage
-} from "./storage.js?v=20260513c";
+} from "./storage.js?v=20260513g";
 import {
   copyText,
   formatDate,
@@ -18,7 +18,7 @@ import {
   isValidDateValue,
   registerServiceWorker,
   sortEntriesDesc
-} from "./utils.js?v=20260513c";
+} from "./utils.js?v=20260513g";
 
 const SCREEN_INDEX = {
   home: 0,
@@ -242,111 +242,6 @@ function bindPressHint(element, getMessage) {
     event.stopImmediatePropagation();
     suppressClick = false;
   }, true);
-}
-
-function bindEntryGestures(surface, row, entry) {
-  let pointerId = null;
-  let startX = 0;
-  let startY = 0;
-  let shiftX = 0;
-  let tracking = false;
-  let swiping = false;
-  let suppressClick = false;
-
-  const resetSwipe = () => {
-    shiftX = 0;
-    tracking = false;
-    swiping = false;
-    pointerId = null;
-    row.style.removeProperty("--swipe-shift");
-    row.classList.remove("swiping-left", "swiping-right");
-  };
-
-  surface.addEventListener("pointerdown", (event) => {
-    if (event.pointerType !== "touch") {
-      return;
-    }
-
-    tracking = true;
-    swiping = false;
-    suppressClick = false;
-    pointerId = event.pointerId;
-    startX = event.clientX;
-    startY = event.clientY;
-    shiftX = 0;
-    surface.setPointerCapture(event.pointerId);
-  });
-
-  surface.addEventListener("pointermove", (event) => {
-    if (!tracking || event.pointerId !== pointerId) {
-      return;
-    }
-
-    const deltaX = event.clientX - startX;
-    const deltaY = event.clientY - startY;
-
-    if (!swiping) {
-      if (Math.abs(deltaY) > 14 && Math.abs(deltaY) > Math.abs(deltaX)) {
-        if (pointerId !== null && surface.hasPointerCapture(pointerId)) {
-          surface.releasePointerCapture(pointerId);
-        }
-        resetSwipe();
-        return;
-      }
-
-      if (Math.abs(deltaX) < 12) {
-        return;
-      }
-
-      swiping = true;
-      suppressClick = true;
-    }
-
-    shiftX = Math.max(-90, Math.min(90, deltaX));
-    row.style.setProperty("--swipe-shift", `${shiftX}px`);
-    row.classList.toggle("swiping-right", shiftX > 12);
-    row.classList.toggle("swiping-left", shiftX < -12);
-  });
-
-  const finishSwipe = (event) => {
-    if (!tracking || event.pointerId !== pointerId) {
-      return;
-    }
-
-    if (surface.hasPointerCapture(event.pointerId)) {
-      surface.releasePointerCapture(event.pointerId);
-    }
-
-    const finalShift = shiftX;
-    resetSwipe();
-
-    if (finalShift >= 72) {
-      suppressClick = true;
-      openEditFlow(entry.id);
-      return;
-    }
-
-    if (finalShift <= -72) {
-      suppressClick = true;
-      deleteEntry(entry.id);
-    }
-  };
-
-  surface.addEventListener("pointerup", finishSwipe);
-  surface.addEventListener("pointercancel", finishSwipe);
-
-  surface.addEventListener("click", (event) => {
-    if (suppressClick) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      suppressClick = false;
-      return;
-    }
-
-    if (entry.note) {
-      toggleExpandedEntry(entry.id);
-    }
-  });
 }
 
 function initialize() {
@@ -701,13 +596,11 @@ function renderMonthFilter() {
 function createEntryRow(entry) {
   const row = document.createElement("article");
   row.className = "entry-row";
-  row.dataset.swipeStart = translate("edit_entry");
-  row.dataset.swipeEnd = translate("delete_entry");
   row.classList.toggle("expanded", state.expandedEntryId === entry.id);
   row.classList.toggle("actions-open", state.manageEntriesOpen);
 
-  const swipeSurface = document.createElement("div");
-  swipeSurface.className = "entry-swipe-surface";
+  const entrySurface = document.createElement("div");
+  entrySurface.className = "entry-surface";
 
   const summary = document.createElement("div");
   summary.className = "entry-summary";
@@ -717,6 +610,11 @@ function createEntryRow(entry) {
   main.type = "button";
   main.setAttribute("aria-expanded", String(Boolean(entry.note) && state.expandedEntryId === entry.id));
   main.setAttribute("aria-label", formatEntryMeta(entry));
+  main.addEventListener("click", () => {
+    if (entry.note) {
+      toggleExpandedEntry(entry.id);
+    }
+  });
 
   const meta = document.createElement("span");
   meta.className = "entry-meta";
@@ -748,17 +646,16 @@ function createEntryRow(entry) {
 
   actions.append(editButton, deleteButton);
   summary.appendChild(actions);
-  swipeSurface.appendChild(summary);
+  entrySurface.appendChild(summary);
 
   if (entry.note) {
     const details = document.createElement("div");
     details.className = "entry-details";
     details.textContent = entry.note;
-    swipeSurface.appendChild(details);
+    entrySurface.appendChild(details);
   }
 
-  row.appendChild(swipeSurface);
-  bindEntryGestures(swipeSurface, row, entry);
+  row.appendChild(entrySurface);
   return row;
 }
 
@@ -768,10 +665,6 @@ function createEntryActionButton(kind, label, onClick) {
   button.type = "button";
   button.textContent = label;
   button.setAttribute("aria-label", label);
-
-  button.addEventListener("pointerdown", (event) => {
-    event.stopPropagation();
-  });
 
   button.addEventListener("click", (event) => {
     event.preventDefault();
