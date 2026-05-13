@@ -1,4 +1,4 @@
-import { TRANSLATIONS } from "./translations.js?v=20260427b";
+import { TRANSLATIONS } from "./translations.js?v=20260513a";
 import {
   getStoredFullName,
   getStoredNameParts,
@@ -8,7 +8,7 @@ import {
   sanitizeEntry,
   setStoredName,
   writeLanguage
-} from "./storage.js?v=20260427b";
+} from "./storage.js?v=20260513a";
 import {
   copyText,
   formatDate,
@@ -18,7 +18,7 @@ import {
   isValidDateValue,
   registerServiceWorker,
   sortEntriesDesc
-} from "./utils.js?v=20260427b";
+} from "./utils.js?v=20260513a";
 
 const SCREEN_INDEX = {
   home: 0,
@@ -696,6 +696,9 @@ function createEntryRow(entry) {
   const swipeSurface = document.createElement("div");
   swipeSurface.className = "entry-swipe-surface";
 
+  const summary = document.createElement("div");
+  summary.className = "entry-summary";
+
   const main = document.createElement("button");
   main.className = "entry-main";
   main.type = "button";
@@ -722,7 +725,17 @@ function createEntryRow(entry) {
 
   meta.append(hours, date);
   main.append(meta, preview);
-  swipeSurface.appendChild(main);
+  summary.appendChild(main);
+
+  const actions = document.createElement("div");
+  actions.className = "entry-actions";
+
+  const editButton = createEntryActionButton("edit", translate("edit_entry"), () => openEditFlow(entry.id));
+  const deleteButton = createEntryActionButton("delete", translate("delete_entry"), () => deleteEntry(entry.id));
+
+  actions.append(editButton, deleteButton);
+  summary.appendChild(actions);
+  swipeSurface.appendChild(summary);
 
   if (entry.note) {
     const details = document.createElement("div");
@@ -734,6 +747,26 @@ function createEntryRow(entry) {
   row.appendChild(swipeSurface);
   bindEntryGestures(swipeSurface, row, entry);
   return row;
+}
+
+function createEntryActionButton(kind, label, onClick) {
+  const button = document.createElement("button");
+  button.className = `entry-action entry-action-${kind}`;
+  button.type = "button";
+  button.textContent = label;
+  button.setAttribute("aria-label", label);
+
+  button.addEventListener("pointerdown", (event) => {
+    event.stopPropagation();
+  });
+
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onClick();
+  });
+
+  return button;
 }
 
 function deleteEntry(id) {

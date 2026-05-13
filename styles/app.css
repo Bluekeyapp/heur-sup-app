@@ -396,9 +396,15 @@ input[type="date"].big-input {
   touch-action: pan-y;
 }
 
+.entry-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+}
+
 .entry-main {
   min-width: 0;
-  width: 100%;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: start;
@@ -409,6 +415,39 @@ input[type="date"].big-input {
   padding: 0;
   text-align: left;
   touch-action: pan-y;
+}
+
+.entry-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.entry-action {
+  min-width: 54px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  padding: 7px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.entry-action:active {
+  transform: scale(0.96);
+}
+
+.entry-action-edit {
+  color: #d6d6d6;
+}
+
+.entry-action-delete {
+  color: #ff9b9b;
 }
 
 .entry-meta {
@@ -903,6 +942,20 @@ body.sheet-open .sheet {
     grid-template-columns: 1fr;
     align-items: start;
     row-gap: 6px;
+  }
+
+  .entry-summary {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .entry-actions {
+    justify-content: flex-start;
+  }
+
+  .entry-action {
+    min-width: 58px;
+    padding: 8px 11px;
   }
 
   .entry-meta {
