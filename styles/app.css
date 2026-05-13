@@ -424,6 +424,45 @@ input[type="date"].big-input {
   flex-shrink: 0;
 }
 
+.entry-menu-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--subtle);
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.entry-menu-button svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.entry-menu-button svg circle {
+  fill: currentColor;
+  stroke: none;
+}
+
+.entry-row.actions-open .entry-menu-button {
+  border-color: var(--border);
+  background: var(--panel);
+  color: var(--text);
+}
+
+.entry-menu-button:active {
+  transform: scale(0.96);
+}
+
 .entry-action {
   min-width: 54px;
   border: 1px solid var(--border);
@@ -436,9 +475,18 @@ input[type="date"].big-input {
   line-height: 1;
   transition: background-color 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
   -webkit-tap-highlight-color: transparent;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(6px);
 }
 
-.entry-action:active {
+.entry-row.actions-open .entry-action {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.entry-row.actions-open .entry-action:active {
   transform: scale(0.96);
 }
 

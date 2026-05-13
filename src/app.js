@@ -1,4 +1,4 @@
-import { TRANSLATIONS } from "./translations.js?v=20260513a";
+import { TRANSLATIONS } from "./translations.js?v=20260513b";
 import {
   getStoredFullName,
   getStoredNameParts,
@@ -8,7 +8,7 @@ import {
   sanitizeEntry,
   setStoredName,
   writeLanguage
-} from "./storage.js?v=20260513a";
+} from "./storage.js?v=20260513b";
 import {
   copyText,
   formatDate,
@@ -18,7 +18,7 @@ import {
   isValidDateValue,
   registerServiceWorker,
   sortEntriesDesc
-} from "./utils.js?v=20260513a";
+} from "./utils.js?v=20260513b";
 
 const SCREEN_INDEX = {
   home: 0,
@@ -33,6 +33,7 @@ const state = {
   entries: sortEntriesDesc(loadEntries()),
   selectedMonthKey: getCurrentMonthKey(),
   expandedEntryId: null,
+  openEntryActionsId: null,
   sendSheetOpen: false,
   currentScreen: SCREEN_INDEX.home,
   draft: createEmptyDraft(),
@@ -563,6 +564,11 @@ function toggleExpandedEntry(id) {
   renderHome();
 }
 
+function toggleEntryActions(id) {
+  state.openEntryActionsId = state.openEntryActionsId === id ? null : id;
+  renderHome();
+}
+
 function populateConfirmation() {
   dom.confirmDate.textContent = formatDate(translate("locale"), state.draft.date, {
     weekday: "long",
@@ -692,6 +698,7 @@ function createEntryRow(entry) {
   row.dataset.swipeStart = translate("edit_entry");
   row.dataset.swipeEnd = translate("delete_entry");
   row.classList.toggle("expanded", state.expandedEntryId === entry.id);
+  row.classList.toggle("actions-open", state.openEntryActionsId === entry.id);
 
   const swipeSurface = document.createElement("div");
   swipeSurface.className = "entry-swipe-surface";
@@ -730,10 +737,11 @@ function createEntryRow(entry) {
   const actions = document.createElement("div");
   actions.className = "entry-actions";
 
+  const menuButton = createEntryMenuButton(entry);
   const editButton = createEntryActionButton("edit", translate("edit_entry"), () => openEditFlow(entry.id));
   const deleteButton = createEntryActionButton("delete", translate("delete_entry"), () => deleteEntry(entry.id));
 
-  actions.append(editButton, deleteButton);
+  actions.append(menuButton, editButton, deleteButton);
   summary.appendChild(actions);
   swipeSurface.appendChild(summary);
 
@@ -747,6 +755,33 @@ function createEntryRow(entry) {
   row.appendChild(swipeSurface);
   bindEntryGestures(swipeSurface, row, entry);
   return row;
+}
+
+function createEntryMenuButton(entry) {
+  const label = translate("edit_entry");
+  const button = document.createElement("button");
+  button.className = "entry-menu-button";
+  button.type = "button";
+  button.setAttribute("aria-label", label);
+  button.setAttribute("aria-expanded", String(state.openEntryActionsId === entry.id));
+  button.innerHTML = `
+    <svg viewBox="0 0 18 18" aria-hidden="true">
+      <circle cx="9" cy="9" r="2.15"></circle>
+      <path d="M9 1.75v2.1M9 14.15v2.1M3.87 3.87l1.49 1.49M12.64 12.64l1.49 1.49M1.75 9h2.1M14.15 9h2.1M3.87 14.13l1.49-1.49M12.64 5.36l1.49-1.49"></path>
+    </svg>
+  `;
+
+  button.addEventListener("pointerdown", (event) => {
+    event.stopPropagation();
+  });
+
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleEntryActions(entry.id);
+  });
+
+  return button;
 }
 
 function createEntryActionButton(kind, label, onClick) {
@@ -777,6 +812,9 @@ function deleteEntry(id) {
   state.entries = state.entries.filter((entry) => entry.id !== id);
   if (state.expandedEntryId === id) {
     state.expandedEntryId = null;
+  }
+  if (state.openEntryActionsId === id) {
+    state.openEntryActionsId = null;
   }
   persistEntries(state.entries);
   renderHome();
