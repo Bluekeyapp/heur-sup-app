@@ -1,4 +1,4 @@
-import { TRANSLATIONS } from "./translations.js?v=20260513b";
+import { TRANSLATIONS } from "./translations.js?v=20260513c";
 import {
   getStoredFullName,
   getStoredNameParts,
@@ -8,7 +8,7 @@ import {
   sanitizeEntry,
   setStoredName,
   writeLanguage
-} from "./storage.js?v=20260513b";
+} from "./storage.js?v=20260513c";
 import {
   copyText,
   formatDate,
@@ -18,7 +18,7 @@ import {
   isValidDateValue,
   registerServiceWorker,
   sortEntriesDesc
-} from "./utils.js?v=20260513b";
+} from "./utils.js?v=20260513c";
 
 const SCREEN_INDEX = {
   home: 0,
@@ -33,7 +33,7 @@ const state = {
   entries: sortEntriesDesc(loadEntries()),
   selectedMonthKey: getCurrentMonthKey(),
   expandedEntryId: null,
-  openEntryActionsId: null,
+  manageEntriesOpen: false,
   sendSheetOpen: false,
   currentScreen: SCREEN_INDEX.home,
   draft: createEmptyDraft(),
@@ -57,6 +57,7 @@ const dom = {
   homeTotal: document.getElementById("homeTotal"),
   homePeriod: document.getElementById("homePeriod"),
   homeNameText: document.getElementById("homeNameText"),
+  manageEntriesButton: document.getElementById("manageEntriesButton"),
   monthFilterWrap: document.getElementById("monthFilterWrap"),
   monthFilter: document.getElementById("monthFilter"),
   nameOverlay: document.getElementById("nameOverlay"),
@@ -162,6 +163,7 @@ function bindEvents() {
   document.getElementById("startFlowButton").addEventListener("click", startFlow);
   document.getElementById("openSendButton").addEventListener("click", openSend);
   document.getElementById("editNameButton").addEventListener("click", openNameOverlay);
+  dom.manageEntriesButton.addEventListener("click", toggleManageEntries);
   document.getElementById("continueFromDateButton").addEventListener("click", goToHours);
   document.getElementById("continueFromHoursButton").addEventListener("click", goToNote);
   document.getElementById("continueFromNoteButton").addEventListener("click", goToConfirm);
@@ -564,8 +566,8 @@ function toggleExpandedEntry(id) {
   renderHome();
 }
 
-function toggleEntryActions(id) {
-  state.openEntryActionsId = state.openEntryActionsId === id ? null : id;
+function toggleManageEntries() {
+  state.manageEntriesOpen = !state.manageEntriesOpen;
   renderHome();
 }
 
@@ -635,6 +637,9 @@ function renderHome() {
   dom.homeTotal.textContent = formatHours(total);
   dom.homePeriod.textContent = state.entries.length ? formatMonthKey(state.selectedMonthKey) : "";
   dom.openSendButton.disabled = filteredEntries.length === 0;
+  dom.manageEntriesButton.disabled = filteredEntries.length === 0;
+  dom.manageEntriesButton.setAttribute("aria-expanded", String(state.manageEntriesOpen));
+  dom.manageEntriesButton.classList.toggle("active", state.manageEntriesOpen);
 
   renderMonthFilter();
 
@@ -647,6 +652,7 @@ function renderHome() {
   }
 
   if (!filteredEntries.length) {
+    state.manageEntriesOpen = false;
     const empty = document.createElement("div");
     empty.className = "empty-msg";
     empty.textContent = translate("empty_month_msg");
@@ -698,7 +704,7 @@ function createEntryRow(entry) {
   row.dataset.swipeStart = translate("edit_entry");
   row.dataset.swipeEnd = translate("delete_entry");
   row.classList.toggle("expanded", state.expandedEntryId === entry.id);
-  row.classList.toggle("actions-open", state.openEntryActionsId === entry.id);
+  row.classList.toggle("actions-open", state.manageEntriesOpen);
 
   const swipeSurface = document.createElement("div");
   swipeSurface.className = "entry-swipe-surface";
@@ -737,11 +743,10 @@ function createEntryRow(entry) {
   const actions = document.createElement("div");
   actions.className = "entry-actions";
 
-  const menuButton = createEntryMenuButton(entry);
   const editButton = createEntryActionButton("edit", translate("edit_entry"), () => openEditFlow(entry.id));
   const deleteButton = createEntryActionButton("delete", translate("delete_entry"), () => deleteEntry(entry.id));
 
-  actions.append(menuButton, editButton, deleteButton);
+  actions.append(editButton, deleteButton);
   summary.appendChild(actions);
   swipeSurface.appendChild(summary);
 
@@ -755,33 +760,6 @@ function createEntryRow(entry) {
   row.appendChild(swipeSurface);
   bindEntryGestures(swipeSurface, row, entry);
   return row;
-}
-
-function createEntryMenuButton(entry) {
-  const label = translate("edit_entry");
-  const button = document.createElement("button");
-  button.className = "entry-menu-button";
-  button.type = "button";
-  button.setAttribute("aria-label", label);
-  button.setAttribute("aria-expanded", String(state.openEntryActionsId === entry.id));
-  button.innerHTML = `
-    <svg viewBox="0 0 18 18" aria-hidden="true">
-      <circle cx="9" cy="9" r="2.15"></circle>
-      <path d="M9 1.75v2.1M9 14.15v2.1M3.87 3.87l1.49 1.49M12.64 12.64l1.49 1.49M1.75 9h2.1M14.15 9h2.1M3.87 14.13l1.49-1.49M12.64 5.36l1.49-1.49"></path>
-    </svg>
-  `;
-
-  button.addEventListener("pointerdown", (event) => {
-    event.stopPropagation();
-  });
-
-  button.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    toggleEntryActions(entry.id);
-  });
-
-  return button;
 }
 
 function createEntryActionButton(kind, label, onClick) {
@@ -812,9 +790,6 @@ function deleteEntry(id) {
   state.entries = state.entries.filter((entry) => entry.id !== id);
   if (state.expandedEntryId === id) {
     state.expandedEntryId = null;
-  }
-  if (state.openEntryActionsId === id) {
-    state.openEntryActionsId = null;
   }
   persistEntries(state.entries);
   renderHome();

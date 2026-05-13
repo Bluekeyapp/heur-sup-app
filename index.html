@@ -8,13 +8,13 @@
   <meta name="theme-color" content="#0a0a0a">
   <meta name="description" content="Track overtime hours and share a clean report.">
   <title>Overtime</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=20260513b">
+  <link rel="manifest" href="./manifest.webmanifest?v=20260513c">
   <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./assets/icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles/app.css?v=20260513b">
+  <link rel="stylesheet" href="./styles/app.css?v=20260513c">
 </head>
 <body>
   <svg style="display:none">
@@ -31,10 +31,18 @@
         <div class="home-period" id="homePeriod"></div>
       </div>
       <div class="home-name-row">
-        <span class="home-name-text" id="homeNameText"></span>
-        <button class="edit-name-btn" id="editNameButton" type="button" data-i18n-title="edit_name" data-i18n-aria-label="edit_name">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M11.5 2.5a2.121 2.121 0 0 1 3 3L5 15H1v-4L11.5 2.5z"></path>
+        <div class="home-name-main">
+          <span class="home-name-text" id="homeNameText"></span>
+          <button class="edit-name-btn" id="editNameButton" type="button" data-i18n-title="edit_name" data-i18n-aria-label="edit_name">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M11.5 2.5a2.121 2.121 0 0 1 3 3L5 15H1v-4L11.5 2.5z"></path>
+            </svg>
+          </button>
+        </div>
+        <button class="manage-entries-btn" id="manageEntriesButton" type="button" data-i18n-title="edit_entry" data-i18n-aria-label="edit_entry">
+          <svg viewBox="0 0 18 18" aria-hidden="true">
+            <circle cx="9" cy="9" r="2.15"></circle>
+            <path d="M9 1.75v2.1M9 14.15v2.1M3.87 3.87l1.49 1.49M12.64 12.64l1.49 1.49M1.75 9h2.1M14.15 9h2.1M3.87 14.13l1.49-1.49M12.64 5.36l1.49-1.49"></path>
           </svg>
         </button>
       </div>
@@ -202,6 +210,6 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script type="module" src="./src/app.js?v=20260513b"></script>
+  <script type="module" src="./src/app.js?v=20260513c"></script>
 </body>
 </html>
