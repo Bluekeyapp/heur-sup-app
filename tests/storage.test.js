@@ -49,6 +49,20 @@ test("sanitizeEntry rejects impossible calendar dates", () => {
   }), null);
 });
 
+test("sanitizeEntry allows zero-hour entries", () => {
+  assert.deepEqual(sanitizeEntry({
+    id: 7,
+    date: "2026-04-26",
+    hours: 0,
+    note: ""
+  }), {
+    id: 7,
+    date: "2026-04-26",
+    hours: 0,
+    note: ""
+  });
+});
+
 test("loadEntries filters bad stored records", () => {
   localStorage.clear();
   localStorage.setItem(STORAGE_KEYS.entries, JSON.stringify([

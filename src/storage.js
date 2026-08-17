@@ -24,7 +24,7 @@ export function sanitizeEntry(entry) {
   }
 
   const hours = Number(entry.hours);
-  if (!Number.isFinite(hours) || hours <= 0 || hours > 24) {
+  if (!Number.isFinite(hours) || hours < 0 || hours > 24) {
     return null;
   }
 

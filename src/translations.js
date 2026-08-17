@@ -41,6 +41,7 @@ export const TRANSLATIONS = {
     copied: "Copied",
     saved: "Entry saved",
     updated: "Entry updated",
+    zero_hours_note_required: "Add a note to save a 0h entry.",
     no_entries_report: "Add an entry before sending a report.",
     empty_month_msg: "No entries in this month.",
     locale: "en-US"
@@ -87,6 +88,7 @@ export const TRANSLATIONS = {
     copied: "Copie",
     saved: "Saisie enregistree",
     updated: "Saisie mise a jour",
+    zero_hours_note_required: "Ajoutez une note pour enregistrer 0h.",
     no_entries_report: "Ajoutez une saisie avant d'envoyer un rapport.",
     empty_month_msg: "Aucune saisie pour ce mois.",
     locale: "fr-FR"
@@ -133,6 +135,7 @@ export const TRANSLATIONS = {
     copied: "Copiado",
     saved: "Entrada salva",
     updated: "Entrada atualizada",
+    zero_hours_note_required: "Adicione uma observacao para salvar 0h.",
     no_entries_report: "Adicione uma entrada antes de enviar um relatorio.",
     empty_month_msg: "Nenhuma entrada neste mes.",
     locale: "pt-PT"

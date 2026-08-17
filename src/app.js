@@ -1,4 +1,4 @@
-import { TRANSLATIONS } from "./translations.js?v=20260513g";
+import { TRANSLATIONS } from "./translations.js?v=20260513i";
 import {
   getStoredFullName,
   getStoredNameParts,
@@ -8,7 +8,7 @@ import {
   sanitizeEntry,
   setStoredName,
   writeLanguage
-} from "./storage.js?v=20260513g";
+} from "./storage.js?v=20260513i";
 import {
   copyText,
   formatDate,
@@ -18,7 +18,7 @@ import {
   isValidDateValue,
   registerServiceWorker,
   sortEntriesDesc
-} from "./utils.js?v=20260513g";
+} from "./utils.js?v=20260513i";
 
 const SCREEN_INDEX = {
   home: 0,
@@ -83,7 +83,7 @@ bindEvents();
 initialize();
 
 function createEmptyDraft() {
-  return { date: "", hours: 0, note: "" };
+  return { date: "", hours: null, note: "" };
 }
 
 function useCompactMonthLabels() {
@@ -435,7 +435,7 @@ function goToHours() {
 
 function goToNote() {
   const total = getPickerTotalHours();
-  if (total <= 0) {
+  if (total < 0) {
     shakeElement(dom.dispHours);
     return;
   }
@@ -446,7 +446,7 @@ function goToNote() {
 }
 
 function goToConfirm() {
-  if (!state.draft.date || !state.draft.hours) {
+  if (!state.draft.date || typeof state.draft.hours !== "number") {
     goTo(SCREEN_INDEX.date);
     return;
   }
@@ -486,6 +486,17 @@ function populateConfirmation() {
 function saveEntry() {
   const editingEntryId = state.editingEntryId;
   const editing = isEditingEntry();
+
+  if (state.draft.hours === 0 && !state.draft.note) {
+    showToast(translate("zero_hours_note_required"));
+    goTo(SCREEN_INDEX.note);
+    window.setTimeout(() => {
+      dom.inputNote.focus();
+      shakeElement(dom.inputNote);
+    }, 120);
+    return;
+  }
+
   const entry = sanitizeEntry({
     id: editing ? editingEntryId : Date.now(),
     date: state.draft.date,
