@@ -27,15 +27,15 @@ class MemoryStorage {
 
 globalThis.localStorage = new MemoryStorage();
 
-test("readLanguage keeps supported languages and maps old Portuguese to Spanish", () => {
-  const translations = { en: {}, fr: {}, es: {} };
+test("readLanguage keeps supported languages", () => {
+  const translations = { en: {}, fr: {}, pt: {} };
 
   localStorage.clear();
   localStorage.setItem(STORAGE_KEYS.lang, "fr");
   assert.equal(readLanguage(translations), "fr");
 
   localStorage.setItem(STORAGE_KEYS.lang, "pt");
-  assert.equal(readLanguage(translations), "es");
+  assert.equal(readLanguage(translations), "pt");
 });
 
 test("sanitizeEntry keeps valid entries tidy", () => {

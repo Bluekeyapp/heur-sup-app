@@ -7,9 +7,6 @@ export const STORAGE_KEYS = {
 
 export function readLanguage(translations, fallback = "en") {
   const stored = localStorage.getItem(STORAGE_KEYS.lang);
-  if (stored === "pt" && Object.prototype.hasOwnProperty.call(translations, "es")) {
-    return "es";
-  }
   return Object.prototype.hasOwnProperty.call(translations, stored) ? stored : fallback;
 }
 
