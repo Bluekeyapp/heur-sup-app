@@ -1,6 +1,6 @@
-# Heure Sup App
+# Heures supplémentaires
 
-Production-oriented static structure for the overtime tracker app.
+Production-oriented static structure for the heures supplémentaires tracker app.
 
 ## Structure
 

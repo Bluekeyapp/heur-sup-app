@@ -1,7 +1,7 @@
 {
-  "name": "Heure Sup App",
-  "short_name": "Heure Sup",
-  "description": "Track overtime hours and share a clean report.",
+  "name": "Heures supplémentaires",
+  "short_name": "Heures sup.",
+  "description": "Suivez vos heures supplémentaires et partagez un rapport clair.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0a0a0a",

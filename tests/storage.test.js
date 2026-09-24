@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   loadEntries,
   persistEntries,
+  readLanguage,
   sanitizeEntry,
   STORAGE_KEYS
 } from "../src/storage.js";
@@ -25,6 +26,17 @@ class MemoryStorage {
 }
 
 globalThis.localStorage = new MemoryStorage();
+
+test("readLanguage keeps supported languages and maps old Portuguese to Spanish", () => {
+  const translations = { en: {}, fr: {}, es: {} };
+
+  localStorage.clear();
+  localStorage.setItem(STORAGE_KEYS.lang, "fr");
+  assert.equal(readLanguage(translations), "fr");
+
+  localStorage.setItem(STORAGE_KEYS.lang, "pt");
+  assert.equal(readLanguage(translations), "es");
+});
 
 test("sanitizeEntry keeps valid entries tidy", () => {
   assert.deepEqual(sanitizeEntry({
