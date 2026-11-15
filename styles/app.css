@@ -238,14 +238,14 @@ input[type="date"].big-input {
 #screen-home { background: var(--bg); }
 
 .home-header {
-  padding: 16px 0 14px;
+  padding: 34px 0 14px;
   flex-shrink: 0;
 }
 
 .home-header h1 {
   margin-bottom: 6px;
   font-size: 0.8rem;
-  color: var(--subtle);
+  color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-weight: 600;
@@ -954,7 +954,7 @@ body.sheet-open .sheet {
   }
 
   .home-header {
-    padding: 10px 0 12px;
+    padding: 34px 0 12px;
   }
 
   .home-period {
