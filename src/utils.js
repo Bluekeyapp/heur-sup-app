@@ -104,6 +104,24 @@ function capitalizeFirstLetter(value) {
   return value.charAt(0).toLocaleUpperCase(REPORT_LOCALE) + value.slice(1);
 }
 
+export const MAX_ENTRY_HOURS = 24;
+
+// Keeps a picker value at or below MAX_ENTRY_HOURS. When the limit is exceeded,
+// the field the user did not just change gives way: raising the hours to 24
+// clears the minutes, and picking minutes while at 24h drops the hours to 23.
+export function clampPickerTime(hours, minutes, changed = "hours") {
+  const safeHours = Math.max(0, Math.min(MAX_ENTRY_HOURS, Math.trunc(hours) || 0));
+  const safeMinutes = Math.max(0, Math.min(59, Math.trunc(minutes) || 0));
+
+  if (safeHours * 60 + safeMinutes <= MAX_ENTRY_HOURS * 60) {
+    return { hours: safeHours, minutes: safeMinutes };
+  }
+
+  return changed === "minutes"
+    ? { hours: MAX_ENTRY_HOURS - 1, minutes: safeMinutes }
+    : { hours: MAX_ENTRY_HOURS, minutes: 0 };
+}
+
 export function getLocalDateInputValue(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");

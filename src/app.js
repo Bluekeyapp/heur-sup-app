@@ -1,4 +1,4 @@
-import { TRANSLATIONS } from "./translations.js?v=20261115a";
+import { TRANSLATIONS } from "./translations.js?v=20261124a";
 import {
   getStoredFullName,
   getStoredNameParts,
@@ -8,8 +8,9 @@ import {
   sanitizeEntry,
   setStoredName,
   writeLanguage
-} from "./storage.js?v=20261115a";
+} from "./storage.js?v=20261124a";
 import {
+  clampPickerTime,
   copyText,
   formatDate,
   formatFrenchReport,
@@ -18,7 +19,7 @@ import {
   isValidDateValue,
   registerServiceWorker,
   sortEntriesDesc
-} from "./utils.js?v=20261115a";
+} from "./utils.js?v=20261124a";
 
 const SCREEN_INDEX = {
   home: 0,
@@ -111,14 +112,7 @@ function formatMonthKey(monthKey, monthStyle = "long") {
 }
 
 function formatEntryMeta(entry) {
-  const parts = new Intl.DateTimeFormat(translate("locale"), {
-    day: "numeric",
-    month: "short"
-  }).formatToParts(new Date(`${entry.date}T00:00:00`));
-
-  const day = parts.find((part) => part.type === "day")?.value || "";
-  const month = parts.find((part) => part.type === "month")?.value || "";
-  return `${formatHours(entry.hours)} ${day} ${month}`.trim();
+  return `${formatHours(entry.hours)} ${formatEntryDayMonth(entry)}`.trim();
 }
 
 function formatEntryDayMonth(entry) {
@@ -370,19 +364,24 @@ function startFlow() {
 }
 
 function changeHours(step) {
-  state.pickerHours = Math.max(0, Math.min(24, state.pickerHours + step));
-  updatePickerUI();
+  setPickerTime(state.pickerHours + step, state.pickerMins, "hours");
 }
 
 function selectMinutes(minutes) {
-  state.pickerMins = minutes;
-  document.querySelectorAll("[data-minutes]").forEach((button) => {
-    button.classList.toggle("active", Number(button.dataset.minutes) === minutes);
-  });
+  setPickerTime(state.pickerHours, minutes, "minutes");
+}
+
+function setPickerTime(hours, minutes, changed) {
+  const next = clampPickerTime(hours, minutes, changed);
+  state.pickerHours = next.hours;
+  state.pickerMins = next.minutes;
   updatePickerUI();
 }
 
 function updatePickerUI() {
+  document.querySelectorAll("[data-minutes]").forEach((button) => {
+    button.classList.toggle("active", Number(button.dataset.minutes) === state.pickerMins);
+  });
   dom.dispHours.textContent = String(state.pickerHours);
   const total = getPickerTotalHours();
   dom.timePreview.textContent = total ? formatHours(total) : "0h";
@@ -395,8 +394,7 @@ function getPickerTotalHours() {
 
 function setPickerFromHours(hoursValue) {
   const totalMinutes = Math.round(hoursValue * 60);
-  state.pickerHours = Math.floor(totalMinutes / 60);
-  state.pickerMins = totalMinutes % 60;
+  setPickerTime(Math.floor(totalMinutes / 60), totalMinutes % 60, "hours");
 }
 
 function openEditFlow(id) {
@@ -435,11 +433,6 @@ function goToHours() {
 
 function goToNote() {
   const total = getPickerTotalHours();
-  if (total < 0) {
-    shakeElement(dom.dispHours);
-    return;
-  }
-
   state.draft.hours = Number(total.toFixed(2));
   goTo(SCREEN_INDEX.note);
   window.setTimeout(() => dom.inputNote.focus(), 120);
