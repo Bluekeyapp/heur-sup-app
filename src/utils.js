@@ -17,9 +17,7 @@ export function sortEntriesAsc(entries) {
 }
 
 const REPORT_LOCALE = "fr-FR";
-// French puts a space before a colon; a no-break space keeps WhatsApp from
-// wrapping the colon onto its own line.
-const COLON = "\u00A0: ";
+const COLON = ": ";
 
 export function formatHours(hoursValue) {
   const totalMinutes = Math.round(hoursValue * 60);
@@ -57,7 +55,7 @@ export function formatFrenchReport({ entries, fullName = "", monthKey }) {
   const reportEntries = sortEntriesAsc(entries);
   const total = reportEntries.reduce((sum, entry) => sum + entry.hours, 0);
   const lines = [
-    "RAPPORT D’HEURES SUPPLÉMENTAIRES",
+    "Heure Supplementaire",
     "",
     `Salarié${COLON}${fullName || "-"}`,
     `Période${COLON}${formatFrenchReportMonth(monthKey)}`,
@@ -97,10 +95,10 @@ function formatFrenchReportHours(hoursValue) {
   const minutes = totalMinutes % 60;
 
   if (!minutes) {
-    return `${hours}H`;
+    return `${hours}h`;
   }
 
-  return `${hours}H${String(minutes).padStart(2, "0")}`;
+  return `${hours}h${String(minutes).padStart(2, "0")}`;
 }
 
 function capitalizeFirstLetter(value) {
