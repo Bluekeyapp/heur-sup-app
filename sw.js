@@ -1,16 +1,18 @@
-const CACHE_NAME = "heures-supplementaires-v40";
+const CACHE_NAME = "heures-supplementaires-v41";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./index.html?v=20261124b",
-  "./styles/app.css?v=20261124b",
-  "./src/app.js?v=20261124b",
-  "./src/translations.js?v=20261124b",
-  "./src/storage.js?v=20261124b",
-  "./src/utils.js?v=20261124b",
-  "./manifest.webmanifest?v=20261124b",
+  "./index.html?v=20261124c",
+  "./styles/app.css?v=20261124c",
+  "./src/app.js?v=20261124c",
+  "./src/translations.js?v=20261124c",
+  "./src/storage.js?v=20261124c",
+  "./src/utils.js?v=20261124c",
+  "./manifest.webmanifest?v=20261124c",
   "./assets/icon.svg",
-  "./assets/icon-maskable.svg"
+  "./assets/icon-maskable.svg",
+  "./assets/apple-touch-icon.png",
+  "./assets/icon-192.png"
 ];
 
 self.addEventListener("install", (event) => {
