@@ -37,7 +37,6 @@ export const TRANSLATIONS = {
     edit_entry: "Edit",
     month_filter: "Month",
     delete_entry: "Delete",
-    delete_confirm: "Delete this entry?",
     copied: "Copied",
     saved: "Entry saved",
     updated: "Entry updated",
@@ -59,6 +58,10 @@ export const TRANSLATIONS = {
     screen_home: "Home",
     decrease_hours: "Remove one hour",
     increase_hours: "Add one hour",
+    future_date: "Pick today or a past date.",
+    deleted: "Entry deleted",
+    undo: "Undo",
+    restored: "Entry restored",
     locale: "en-US"
   },
   fr: {
@@ -99,7 +102,6 @@ export const TRANSLATIONS = {
     edit_entry: "Modifier",
     month_filter: "Mois",
     delete_entry: "Supprimer",
-    delete_confirm: "Supprimer cette saisie ?",
     copied: "Copié",
     saved: "Saisie enregistrée",
     updated: "Saisie mise à jour",
@@ -121,6 +123,10 @@ export const TRANSLATIONS = {
     screen_home: "Accueil",
     decrease_hours: "Retirer une heure",
     increase_hours: "Ajouter une heure",
+    future_date: "Choisissez aujourd'hui ou une date passée.",
+    deleted: "Saisie supprimée",
+    undo: "Annuler",
+    restored: "Saisie restaurée",
     locale: "fr-FR"
   },
   pt: {
@@ -161,7 +167,6 @@ export const TRANSLATIONS = {
     edit_entry: "Editar",
     month_filter: "Mês",
     delete_entry: "Eliminar",
-    delete_confirm: "Eliminar esta entrada?",
     copied: "Copiado",
     saved: "Entrada guardada",
     updated: "Entrada atualizada",
@@ -183,6 +188,10 @@ export const TRANSLATIONS = {
     screen_home: "Início",
     decrease_hours: "Retirar uma hora",
     increase_hours: "Adicionar uma hora",
+    future_date: "Escolha hoje ou uma data passada.",
+    deleted: "Entrada eliminada",
+    undo: "Anular",
+    restored: "Entrada restaurada",
     locale: "pt-PT"
   }
 };

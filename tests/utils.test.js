@@ -6,6 +6,7 @@ import {
   formatHours,
   formatFrenchReport,
   getLocalDateInputValue,
+  isFutureDateValue,
   isValidDateValue,
   sortEntriesAsc,
   sortEntriesDesc
@@ -94,4 +95,12 @@ test("clamped picker values are always accepted by sanitizeEntry", () => {
       assert.ok(entry, `rejected ${hours}h${mins}`);
     }
   }
+});
+
+test("isFutureDateValue rejects dates after today only", () => {
+  const today = new Date(2026, 10, 24, 23, 30);
+  assert.equal(isFutureDateValue("2026-11-24", today), false);
+  assert.equal(isFutureDateValue("2026-11-23", today), false);
+  assert.equal(isFutureDateValue("2026-11-25", today), true);
+  assert.equal(isFutureDateValue("2027-01-01", today), true);
 });
