@@ -8,13 +8,11 @@
   <meta name="theme-color" content="#0a0a0a">
   <meta name="description" content="Suivez vos heures supplémentaires et partagez un rapport clair.">
   <title>Heures supplémentaires</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=20261124c">
+  <link rel="manifest" href="./manifest.webmanifest?v=20261124d">
   <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles/app.css?v=20261124c">
+  <link rel="preload" href="./assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./styles/app.css?v=20261124d">
 </head>
 <body>
   <svg style="display:none">
@@ -24,7 +22,7 @@
   </svg>
 
   <div class="slider" id="slider">
-    <section class="screen" id="screen-home" aria-label="Home">
+    <section class="screen" id="screen-home" aria-label="Accueil" data-i18n-aria-label="screen_home">
       <div class="home-header">
         <h1 data-i18n="overtime"></h1>
         <div class="home-total" id="homeTotal">0h</div>
@@ -72,7 +70,7 @@
       </div>
     </section>
 
-    <section class="screen" id="screen-date" aria-label="Date">
+    <section class="screen" id="screen-date" aria-label="Date" data-i18n-aria-label="lbl_date">
       <div class="topbar">
         <button class="back-btn" id="backFromDateButton" type="button">
           <svg aria-hidden="true"><use href="#ico-back"></use></svg>
@@ -84,13 +82,13 @@
       <div class="step-dots"><div class="dot active"></div><div class="dot"></div><div class="dot"></div></div>
       <div class="content">
         <div class="screen-label" data-i18n="step1"></div>
-        <div class="screen-question" data-i18n="q_date"></div>
-        <input type="date" class="field big-input" id="inputDate">
+        <div class="screen-question" id="questionDate" data-i18n="q_date"></div>
+        <input type="date" class="field big-input" id="inputDate" aria-labelledby="questionDate">
         <button class="cta-btn" id="continueFromDateButton" type="button" data-i18n="continue"></button>
       </div>
     </section>
 
-    <section class="screen" id="screen-hours" aria-label="Hours">
+    <section class="screen" id="screen-hours" aria-label="Heures" data-i18n-aria-label="lbl_hours">
       <div class="topbar">
         <button class="back-btn" id="backFromHoursButton" type="button">
           <svg aria-hidden="true"><use href="#ico-back"></use></svg>
@@ -105,23 +103,23 @@
         <div class="screen-question" data-i18n="q_hours"></div>
         <div class="picker-label" data-i18n="lbl_hours"></div>
         <div class="stepper">
-          <button class="step-btn" id="decreaseHoursButton" type="button" aria-label="Decrease hours">-</button>
-          <div class="step-value" id="dispHours">0</div>
-          <button class="step-btn" id="increaseHoursButton" type="button" aria-label="Increase hours">+</button>
+          <button class="step-btn" id="decreaseHoursButton" type="button" aria-label="Retirer une heure" data-i18n-aria-label="decrease_hours">-</button>
+          <div class="step-value" id="dispHours" aria-hidden="true">0</div>
+          <button class="step-btn" id="increaseHoursButton" type="button" aria-label="Ajouter une heure" data-i18n-aria-label="increase_hours">+</button>
         </div>
         <div class="picker-label mt-24" data-i18n="lbl_minutes"></div>
-        <div class="seg-control">
+        <div class="seg-control" role="group" data-i18n-aria-label="lbl_minutes">
           <button class="seg-btn active" type="button" data-minutes="0">00</button>
           <button class="seg-btn" type="button" data-minutes="15">15</button>
           <button class="seg-btn" type="button" data-minutes="30">30</button>
           <button class="seg-btn" type="button" data-minutes="45">45</button>
         </div>
-        <div class="time-preview" id="timePreview">0h</div>
+        <div class="time-preview" id="timePreview" role="status" aria-live="polite">0h</div>
         <button class="cta-btn" id="continueFromHoursButton" type="button" data-i18n="continue"></button>
       </div>
     </section>
 
-    <section class="screen" id="screen-note" aria-label="Note">
+    <section class="screen" id="screen-note" aria-label="Note" data-i18n-aria-label="lbl_note">
       <div class="topbar">
         <button class="back-btn" id="backFromNoteButton" type="button">
           <svg aria-hidden="true"><use href="#ico-back"></use></svg>
@@ -133,13 +131,13 @@
       <div class="step-dots"><div class="dot done"></div><div class="dot done"></div><div class="dot active"></div></div>
       <div class="content">
         <div class="screen-label" data-i18n="step3"></div>
-        <div class="screen-question" data-i18n="q_notes"></div>
-        <textarea class="field note-input" id="inputNote" rows="4" data-i18n-placeholder="note_placeholder"></textarea>
+        <div class="screen-question" id="questionNotes" data-i18n="q_notes"></div>
+        <textarea class="field note-input" id="inputNote" rows="4" aria-labelledby="questionNotes" data-i18n-placeholder="note_placeholder"></textarea>
         <button class="cta-btn" id="continueFromNoteButton" type="button" data-i18n="continue"></button>
       </div>
     </section>
 
-    <section class="screen" id="screen-confirm" aria-label="Confirm">
+    <section class="screen" id="screen-confirm" aria-label="Confirmer" data-i18n-aria-label="confirm_title">
       <div class="topbar">
         <button class="back-btn" id="backFromConfirmButton" type="button">
           <svg aria-hidden="true"><use href="#ico-back"></use></svg>
@@ -201,8 +199,8 @@
     <div class="welcome-label" data-i18n="welcome"></div>
     <div class="welcome-title" id="welcomeTitle" data-i18n="whats_your_name"></div>
     <div class="name-fields">
-      <input type="text" id="firstName" maxlength="40" autocomplete="given-name" data-i18n-placeholder="first_name">
-      <input type="text" id="lastName" maxlength="40" autocomplete="family-name" data-i18n-placeholder="last_name">
+      <input type="text" id="firstName" maxlength="40" autocomplete="given-name" data-i18n-placeholder="first_name" data-i18n-aria-label="first_name">
+      <input type="text" id="lastName" maxlength="40" autocomplete="family-name" data-i18n-placeholder="last_name" data-i18n-aria-label="last_name">
     </div>
     <button class="cta-btn" id="submitNameButton" type="button" data-i18n="get_started"></button>
     <div class="data-section">
@@ -218,6 +216,6 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script type="module" src="./src/app.js?v=20261124c"></script>
+  <script type="module" src="./src/app.js?v=20261124d"></script>
 </body>
 </html>

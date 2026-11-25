@@ -56,6 +56,9 @@ export const TRANSLATIONS = {
     import_error: "This file isn't a valid backup",
     exported: "Backup exported",
     copy_failed: "Couldn't copy. Select the text instead.",
+    screen_home: "Home",
+    decrease_hours: "Remove one hour",
+    increase_hours: "Add one hour",
     locale: "en-US"
   },
   fr: {
@@ -115,6 +118,9 @@ export const TRANSLATIONS = {
     import_error: "Ce fichier n'est pas une sauvegarde valide",
     exported: "Sauvegarde exportée",
     copy_failed: "Copie impossible. Sélectionnez le texte.",
+    screen_home: "Accueil",
+    decrease_hours: "Retirer une heure",
+    increase_hours: "Ajouter une heure",
     locale: "fr-FR"
   },
   pt: {
@@ -174,6 +180,9 @@ export const TRANSLATIONS = {
     import_error: "Este ficheiro não é uma cópia de segurança válida",
     exported: "Cópia de segurança exportada",
     copy_failed: "Não foi possível copiar. Selecione o texto.",
+    screen_home: "Início",
+    decrease_hours: "Retirar uma hora",
+    increase_hours: "Adicionar uma hora",
     locale: "pt-PT"
   }
 };

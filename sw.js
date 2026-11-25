@@ -1,14 +1,15 @@
-const CACHE_NAME = "heures-supplementaires-v41";
+const CACHE_NAME = "heures-supplementaires-v42";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./index.html?v=20261124c",
-  "./styles/app.css?v=20261124c",
-  "./src/app.js?v=20261124c",
-  "./src/translations.js?v=20261124c",
-  "./src/storage.js?v=20261124c",
-  "./src/utils.js?v=20261124c",
-  "./manifest.webmanifest?v=20261124c",
+  "./index.html?v=20261124d",
+  "./styles/app.css?v=20261124d",
+  "./src/app.js?v=20261124d",
+  "./src/translations.js?v=20261124d",
+  "./src/storage.js?v=20261124d",
+  "./src/utils.js?v=20261124d",
+  "./manifest.webmanifest?v=20261124d",
+  "./assets/fonts/inter-latin.woff2",
   "./assets/icon.svg",
   "./assets/icon-maskable.svg",
   "./assets/apple-touch-icon.png",
@@ -36,25 +37,42 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") {
+  const { request } = event;
+  if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) {
     return;
   }
 
-  event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === "opaque") {
-          return networkResponse;
-        }
-
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-        return networkResponse;
-      })
-      .catch(() => caches.match(event.request).then((cachedResponse) => {
-        return cachedResponse || caches.match("./index.html");
-      }))
-  );
+  event.respondWith(staleWhileRevalidate(event));
 });
+
+// Answer from the cache at once so the app opens instantly even on a weak
+// connection, and refresh the cached copy in the background. A new version is
+// therefore picked up on the next launch rather than the current one.
+async function staleWhileRevalidate(event) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(event.request);
+
+  const network = fetch(event.request).then((response) => {
+    if (response && response.ok && response.type === "basic") {
+      cache.put(event.request, response.clone());
+    }
+    return response;
+  });
+
+  if (cached) {
+    event.waitUntil(network.catch(() => {}));
+    return cached;
+  }
+
+  try {
+    return await network;
+  } catch (error) {
+    if (event.request.mode === "navigate") {
+      const fallback = await cache.match("./index.html");
+      if (fallback) {
+        return fallback;
+      }
+    }
+    throw error;
+  }
+}
