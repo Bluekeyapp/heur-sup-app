@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  clampPickerTime,
   formatHours,
   formatFrenchReport,
   getLocalDateInputValue,
@@ -9,6 +10,7 @@ import {
   sortEntriesAsc,
   sortEntriesDesc
 } from "../src/utils.js";
+import { sanitizeEntry } from "../src/storage.js";
 
 test("formatHours formats whole and partial hours", () => {
   assert.equal(formatHours(0), "0h");
@@ -68,4 +70,28 @@ test("formatFrenchReport produces a simple WhatsApp-readable French report", () 
     "• Samedi 25: 5H",
     "Note - Moving the dirt from one location to and other"
   ].join("\n"));
+});
+
+test("clampPickerTime keeps values within 24 hours", () => {
+  assert.deepEqual(clampPickerTime(3, 30), { hours: 3, minutes: 30 });
+  assert.deepEqual(clampPickerTime(24, 0), { hours: 24, minutes: 0 });
+  assert.deepEqual(clampPickerTime(-1, 0), { hours: 0, minutes: 0 });
+  assert.deepEqual(clampPickerTime(25, 0), { hours: 24, minutes: 0 });
+});
+
+test("clampPickerTime gives way on the field the user did not change", () => {
+  // Raising hours to 24 while 45 minutes are selected clears the minutes.
+  assert.deepEqual(clampPickerTime(24, 45, "hours"), { hours: 24, minutes: 0 });
+  // Picking 45 minutes while at 24h drops the hours to 23.
+  assert.deepEqual(clampPickerTime(24, 45, "minutes"), { hours: 23, minutes: 45 });
+});
+
+test("clamped picker values are always accepted by sanitizeEntry", () => {
+  for (const changed of ["hours", "minutes"]) {
+    for (const minutes of [0, 15, 30, 45]) {
+      const { hours, minutes: mins } = clampPickerTime(24, minutes, changed);
+      const entry = sanitizeEntry({ id: 1, date: "2026-11-24", hours: hours + mins / 60, note: "x" });
+      assert.ok(entry, `rejected ${hours}h${mins}`);
+    }
+  }
 });
