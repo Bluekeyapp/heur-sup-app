@@ -204,10 +204,10 @@ test("the report sheet shows the French report and manages focus", async (t) => 
   $("openSendButton").click();
 
   const report = $("reportBox").textContent;
-  assert.match(report, /Salarié: Ana Silva/);
-  assert.match(report, /Période: Novembre 2026/);
-  assert.match(report, /Total: 1H30/);
-  assert.match(report, /Note - Livraison/);
+  assert.match(report, /Salarié\u00A0: Ana Silva/);
+  assert.match(report, /Période\u00A0: Novembre 2026/);
+  assert.match(report, /Total\u00A0: 1H30/);
+  assert.match(report, /• Mardi 03\/11\u00A0: 1H30\n {3}↳ Livraison/);
   assert.equal(document.activeElement, $("closeSendButton"));
   assert.equal($("slider").inert, true);
 

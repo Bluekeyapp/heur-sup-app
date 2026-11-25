@@ -17,6 +17,9 @@ export function sortEntriesAsc(entries) {
 }
 
 const REPORT_LOCALE = "fr-FR";
+// French puts a space before a colon; a no-break space keeps WhatsApp from
+// wrapping the colon onto its own line.
+const COLON = "\u00A0: ";
 
 export function formatHours(hoursValue) {
   const totalMinutes = Math.round(hoursValue * 60);
@@ -56,12 +59,12 @@ export function formatFrenchReport({ entries, fullName = "", monthKey }) {
   const lines = [
     "RAPPORT D’HEURES SUPPLÉMENTAIRES",
     "",
-    `Salarié: ${fullName || "-"}`,
-    `Période: ${formatFrenchReportMonth(monthKey)}`,
+    `Salarié${COLON}${fullName || "-"}`,
+    `Période${COLON}${formatFrenchReportMonth(monthKey)}`,
     "",
-    `Total: ${formatFrenchReportHours(total)}`,
+    `Total${COLON}${formatFrenchReportHours(total)}`,
     "",
-    "Détails:"
+    `Détails${COLON.trimEnd()}`
   ];
 
   if (!reportEntries.length) {
@@ -74,14 +77,14 @@ export function formatFrenchReport({ entries, fullName = "", monthKey }) {
       lines.push("");
     }
 
-    const dateLabel = capitalizeFirstLetter(formatDate(REPORT_LOCALE, entry.date, {
-      weekday: "long",
-      day: "numeric"
-    }));
-    lines.push(`• ${dateLabel}: ${formatFrenchReportHours(entry.hours)}`);
+    // Weekday plus day/month (« Samedi 14/11 ») so a single line still makes
+    // sense when it is quoted or forwarded on its own.
+    const weekday = capitalizeFirstLetter(formatDate(REPORT_LOCALE, entry.date, { weekday: "long" }));
+    const dayMonth = formatDate(REPORT_LOCALE, entry.date, { day: "2-digit", month: "2-digit" });
+    lines.push(`• ${weekday} ${dayMonth}${COLON}${formatFrenchReportHours(entry.hours)}`);
 
     if (entry.note) {
-      lines.push(`Note - ${entry.note}`);
+      lines.push(`   ↳ ${entry.note}`);
     }
   });
 
