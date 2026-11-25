@@ -1,4 +1,4 @@
-import { isValidDateValue } from "./utils.js?v=20261124a";
+import { isValidDateValue } from "./utils.js?v=20261124b";
 
 export const STORAGE_KEYS = {
   lang: "ot_lang",
@@ -7,7 +7,7 @@ export const STORAGE_KEYS = {
   lastName: "ot_last"
 };
 
-export function readLanguage(translations, fallback = "en") {
+export function readLanguage(translations, fallback = "fr") {
   const stored = localStorage.getItem(STORAGE_KEYS.lang);
   return Object.prototype.hasOwnProperty.call(translations, stored) ? stored : fallback;
 }
@@ -72,4 +72,63 @@ export function getStoredFullName() {
 export function setStoredName(firstName, lastName) {
   localStorage.setItem(STORAGE_KEYS.firstName, firstName);
   localStorage.setItem(STORAGE_KEYS.lastName, lastName);
+}
+
+export const BACKUP_FORMAT = "heures-supplementaires-backup";
+export const BACKUP_VERSION = 1;
+
+export function buildBackup({ entries, firstName = "", lastName = "" }, now = new Date()) {
+  return {
+    format: BACKUP_FORMAT,
+    version: BACKUP_VERSION,
+    exportedAt: now.toISOString(),
+    firstName,
+    lastName,
+    entries
+  };
+}
+
+// Accepts a backup produced by buildBackup, or a bare entries array (the raw
+// value stored under STORAGE_KEYS.entries). Throws if nothing usable is found.
+export function parseBackup(text) {
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error("invalid-json");
+  }
+
+  const isBackup = data && typeof data === "object" && data.format === BACKUP_FORMAT;
+  const rawEntries = Array.isArray(data) ? data : isBackup ? data.entries : null;
+  if (!Array.isArray(rawEntries)) {
+    throw new Error("invalid-backup");
+  }
+
+  const entries = rawEntries.map(sanitizeEntry).filter(Boolean);
+  if (rawEntries.length && !entries.length) {
+    throw new Error("no-valid-entries");
+  }
+
+  return {
+    entries,
+    firstName: isBackup && typeof data.firstName === "string" ? data.firstName.trim().slice(0, 40) : "",
+    lastName: isBackup && typeof data.lastName === "string" ? data.lastName.trim().slice(0, 40) : ""
+  };
+}
+
+// Adds imported entries to the current ones. An imported entry whose id is
+// already present is skipped, so importing the same backup twice is harmless.
+export function mergeEntries(current, imported) {
+  const knownIds = new Set(current.map((entry) => entry.id));
+  const added = imported.filter((entry) => !knownIds.has(entry.id));
+  return { entries: [...current, ...added], addedCount: added.length };
+}
+
+export function requestPersistentStorage() {
+  if (typeof navigator === "undefined" || !navigator.storage?.persist) {
+    return;
+  }
+  navigator.storage.persisted()
+    .then((persisted) => persisted || navigator.storage.persist())
+    .catch(() => {});
 }

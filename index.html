@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -8,13 +8,13 @@
   <meta name="theme-color" content="#0a0a0a">
   <meta name="description" content="Suivez vos heures supplémentaires et partagez un rapport clair.">
   <title>Heures supplémentaires</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=20261124a">
+  <link rel="manifest" href="./manifest.webmanifest?v=20261124b">
   <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./assets/icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles/app.css?v=20261124a">
+  <link rel="stylesheet" href="./styles/app.css?v=20261124b">
 </head>
 <body>
   <svg style="display:none">
@@ -171,7 +171,7 @@
   </div>
 
   <div class="sheet-backdrop" id="sheetBackdrop" aria-hidden="true"></div>
-  <section class="sheet" id="sendSheet" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="sendSheetTitle">
+  <section class="sheet" id="sendSheet" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="sendSheetTitle" inert>
     <div class="sheet-handle" aria-hidden="true"></div>
     <div class="sheet-header">
       <div>
@@ -192,23 +192,32 @@
     </div>
   </section>
 
-  <div class="name-overlay" id="nameOverlay" role="dialog" aria-modal="true">
+  <div class="name-overlay" id="nameOverlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
     <div class="lang-selector">
       <button class="lang-btn" type="button" data-lang="en">English</button>
       <button class="lang-btn" type="button" data-lang="fr">Français</button>
       <button class="lang-btn" type="button" data-lang="pt">Português</button>
     </div>
     <div class="welcome-label" data-i18n="welcome"></div>
-    <div class="welcome-title" data-i18n="whats_your_name"></div>
+    <div class="welcome-title" id="welcomeTitle" data-i18n="whats_your_name"></div>
     <div class="name-fields">
       <input type="text" id="firstName" maxlength="40" autocomplete="given-name" data-i18n-placeholder="first_name">
       <input type="text" id="lastName" maxlength="40" autocomplete="family-name" data-i18n-placeholder="last_name">
     </div>
     <button class="cta-btn" id="submitNameButton" type="button" data-i18n="get_started"></button>
+    <div class="data-section">
+      <div class="data-title" id="dataTitle" data-i18n="data_title"></div>
+      <div class="data-hint" data-i18n="data_hint"></div>
+      <div class="data-actions" role="group" aria-labelledby="dataTitle">
+        <button class="data-btn" id="exportDataButton" type="button" data-i18n="export_data"></button>
+        <button class="data-btn" id="importDataButton" type="button" data-i18n="import_data"></button>
+      </div>
+      <input type="file" id="importFileInput" accept="application/json,.json" hidden>
+    </div>
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script type="module" src="./src/app.js?v=20261124a"></script>
+  <script type="module" src="./src/app.js?v=20261124b"></script>
 </body>
 </html>
