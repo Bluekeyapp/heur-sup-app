@@ -56,20 +56,20 @@ test("formatFrenchReport produces a simple WhatsApp-readable French report", () 
   assert.equal(report, [
     "RAPPORT D’HEURES SUPPLÉMENTAIRES",
     "",
-    "Salarié: Jeovany Duzant",
-    "Période: Avril 2026",
+    "Salarié\u00A0: Jeovany Duzant",
+    "Période\u00A0: Avril 2026",
     "",
-    "Total: 10H30",
+    "Total\u00A0: 10H30",
     "",
-    "Détails:",
-    "• Mercredi 15: 4H",
-    "Note - Cleaning up the ground",
+    "Détails\u00A0:",
+    "• Mercredi 15/04\u00A0: 4H",
+    "   ↳ Cleaning up the ground",
     "",
-    "• Lundi 20: 1H30",
-    "Note - Moving the truck from one location to and other location",
+    "• Lundi 20/04\u00A0: 1H30",
+    "   ↳ Moving the truck from one location to and other location",
     "",
-    "• Samedi 25: 5H",
-    "Note - Moving the dirt from one location to and other"
+    "• Samedi 25/04\u00A0: 5H",
+    "   ↳ Moving the dirt from one location to and other"
   ].join("\n"));
 });
 
