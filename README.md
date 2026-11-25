@@ -27,7 +27,8 @@ Live: https://bluekeyapp.github.io/heur-sup-app/
 | `manifest.webmanifest` | Install metadata and icons |
 | `assets/` | Icons (SVG sources and PNGs, including `icon-1024.png` for app stores) and the self-hosted Inter font |
 | `scripts/` | `bump-version.mjs` (see below) |
-| `tests/` | Unit tests, run with Node's built-in test runner |
+| `tests/` | Unit tests and screen tests (`screens.test.js`), run with Node's built-in test runner |
+| `eslint.config.js` | Lint rules |
 
 ## Run locally
 
@@ -39,15 +40,29 @@ python -m http.server 8080
 
 Then open http://localhost:8080.
 
-## Tests
+## Tests and lint
 
-Requires Node 22.8 or later (for `--test-isolation`); there are no dependencies to install.
+Requires Node 22.8 or later (for `--test-isolation`). The app itself has no dependencies; ESLint and jsdom are dev-only and are never published. Install them once:
+
+```powershell
+npm install
+```
+
+Then:
 
 ```powershell
 npm test
 ```
 
-CI runs the same command on every pull request (`.github/workflows/test.yml`).
+```powershell
+npm run lint
+```
+
+- **Unit tests** cover storage, the backup format, formatting, the French report and versioning.
+- **Screen tests** (`tests/screens.test.js`) load the real `index.html` and `src/app.js` into jsdom and click through the app: first launch, adding, editing and deleting entries, undo, the 24h limit, future dates, the month filter, the report sheet, language switching and backup import. The loader in `tests/helpers/load-app.js` gives each test a fresh page, fresh storage and a fixed date (24 Nov 2026).
+- jsdom does not lay out or animate the page, so these tests do not catch visual problems.
+
+CI runs `npm ci`, `npm run lint` and `npm test` on every pull request (`.github/workflows/test.yml`).
 
 ## Releasing a change
 
