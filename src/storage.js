@@ -1,4 +1,4 @@
-import { isValidDateValue } from "./utils.js?v=20261124c";
+import { isValidDateValue } from "./utils.js?v=20261124d";
 
 export const STORAGE_KEYS = {
   lang: "ot_lang",
