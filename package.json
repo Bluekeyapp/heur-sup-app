@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test --test-isolation=none"
+    "test": "node --test --test-isolation=none",
+    "version:bump": "node scripts/bump-version.mjs"
   }
 }

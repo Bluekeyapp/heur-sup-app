@@ -129,6 +129,12 @@ export function getLocalDateInputValue(date) {
   return `${year}-${month}-${day}`;
 }
 
+// Overtime can only be logged for today or earlier. Dates are compared as
+// YYYY-MM-DD strings in local time, which sort chronologically.
+export function isFutureDateValue(value, today = new Date()) {
+  return value > getLocalDateInputValue(today);
+}
+
 export function isValidDateValue(value) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) {

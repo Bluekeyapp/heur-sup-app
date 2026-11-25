@@ -1,4 +1,4 @@
-import { TRANSLATIONS } from "./translations.js?v=20261124d";
+import { TRANSLATIONS } from "./translations.js?v=20261124e";
 import {
   buildBackup,
   getStoredFullName,
@@ -12,7 +12,7 @@ import {
   sanitizeEntry,
   setStoredName,
   writeLanguage
-} from "./storage.js?v=20261124d";
+} from "./storage.js?v=20261124e";
 import {
   clampPickerTime,
   copyText,
@@ -20,10 +20,11 @@ import {
   formatFrenchReport,
   formatHours,
   getLocalDateInputValue,
+  isFutureDateValue,
   isValidDateValue,
   registerServiceWorker,
   sortEntriesDesc
-} from "./utils.js?v=20261124d";
+} from "./utils.js?v=20261124e";
 
 const SCREEN_INDEX = {
   home: 0,
@@ -75,6 +76,9 @@ const dom = {
   reportBox: document.getElementById("reportBox"),
   saveEntryButton: document.getElementById("saveEntryButton"),
   toast: document.getElementById("toast"),
+  toastText: document.getElementById("toastText"),
+  toastAction: document.getElementById("toastAction"),
+  customMinutesButton: document.getElementById("customMinutesButton"),
   importFileInput: document.getElementById("importFileInput"),
   openSendButton: document.getElementById("openSendButton"),
   copyReportButton: document.getElementById("copyReportButton"),
@@ -86,6 +90,7 @@ let toastTimer = null;
 const pressHintTimers = new WeakMap();
 let viewportTimer = null;
 let focusBeforeSheet = null;
+let toastActionHandler = null;
 
 bindEvents();
 initialize();
@@ -183,6 +188,7 @@ function bindEvents() {
   document.getElementById("exportDataButton").addEventListener("click", exportBackup);
   document.getElementById("importDataButton").addEventListener("click", startImport);
   dom.importFileInput.addEventListener("change", importBackup);
+  dom.toastAction.addEventListener("click", runToastAction);
   dom.closeSendButton.addEventListener("click", closeSendSheet);
   dom.sheetBackdrop.addEventListener("click", closeSendSheet);
 
@@ -395,9 +401,16 @@ function goBack() {
   }
 }
 
+function refreshDateLimit() {
+  // Set on every flow start so the limit is still right if the app stayed
+  // open past midnight.
+  dom.inputDate.max = getLocalDateInputValue(new Date());
+}
+
 function startFlow() {
   closeSendSheet();
   resetEntryFlowState();
+  refreshDateLimit();
   dom.inputDate.value = getLocalDateInputValue(new Date());
   dom.inputNote.value = "";
   selectMinutes(0);
@@ -422,9 +435,21 @@ function setPickerTime(hours, minutes, changed) {
 }
 
 function updatePickerUI() {
+  let matchedChip = false;
   document.querySelectorAll("[data-minutes]").forEach((button) => {
-    button.classList.toggle("active", Number(button.dataset.minutes) === state.pickerMins);
+    const active = Number(button.dataset.minutes) === state.pickerMins;
+    matchedChip = matchedChip || active;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
   });
+
+  // Entries edited from older data or a backup can have minutes that are not
+  // one of the chips (e.g. 20). Show that value as an extra, selected chip
+  // instead of leaving every chip unselected.
+  dom.customMinutesButton.hidden = matchedChip;
+  dom.customMinutesButton.textContent = String(state.pickerMins).padStart(2, "0");
+  dom.customMinutesButton.classList.toggle("active", !matchedChip);
+  dom.customMinutesButton.setAttribute("aria-pressed", String(!matchedChip));
   dom.dispHours.textContent = String(state.pickerHours);
   const total = getPickerTotalHours();
   dom.timePreview.textContent = total ? formatHours(total) : "0h";
@@ -454,6 +479,7 @@ function openEditFlow(id) {
     note: entry.note || ""
   };
 
+  refreshDateLimit();
   dom.inputDate.value = entry.date;
   dom.inputNote.value = entry.note || "";
   setPickerFromHours(entry.hours);
@@ -467,6 +493,12 @@ function goToHours() {
   const selectedDate = dom.inputDate.value;
   if (!isValidDateValue(selectedDate)) {
     shakeElement(dom.inputDate);
+    return;
+  }
+
+  if (isFutureDateValue(selectedDate)) {
+    shakeElement(dom.inputDate);
+    showToast(translate("future_date"));
     return;
   }
 
@@ -724,7 +756,8 @@ function createEntryActionButton(kind, label, onClick) {
 }
 
 function deleteEntry(id) {
-  if (!window.confirm(translate("delete_confirm"))) {
+  const removed = state.entries.find((entry) => entry.id === id);
+  if (!removed) {
     return;
   }
 
@@ -733,6 +766,26 @@ function deleteEntry(id) {
     state.expandedEntryId = null;
   }
   persistEntries(state.entries);
+  refreshAfterEntriesChange();
+  showToast(translate("deleted"), {
+    label: translate("undo"),
+    onClick: () => restoreEntry(removed)
+  });
+}
+
+function restoreEntry(entry) {
+  if (state.entries.some((item) => item.id === entry.id)) {
+    return;
+  }
+
+  state.entries = sortEntriesDesc([entry, ...state.entries]);
+  state.selectedMonthKey = getEntryMonthKey(entry);
+  persistEntries(state.entries);
+  refreshAfterEntriesChange();
+  showToast(translate("restored"));
+}
+
+function refreshAfterEntriesChange() {
   renderHome();
 
   if (state.sendSheetOpen) {
@@ -818,14 +871,30 @@ function openWhatsAppReport() {
   window.location.href = `https://wa.me/?text=${encodeURIComponent(buildReport())}`;
 }
 
-function showToast(message) {
-  dom.toast.textContent = message;
+function showToast(message, action = null) {
+  dom.toastText.textContent = message;
+  toastActionHandler = action ? action.onClick : null;
+  dom.toastAction.hidden = !action;
+  dom.toastAction.textContent = action ? action.label : "";
+  dom.toast.classList.toggle("has-action", Boolean(action));
   dom.toast.classList.add("show");
 
   window.clearTimeout(toastTimer);
-  toastTimer = window.setTimeout(() => {
-    dom.toast.classList.remove("show");
-  }, 1400);
+  toastTimer = window.setTimeout(hideToast, action ? 6000 : 1400);
+}
+
+function hideToast() {
+  dom.toast.classList.remove("show");
+  toastActionHandler = null;
+}
+
+function runToastAction() {
+  const handler = toastActionHandler;
+  window.clearTimeout(toastTimer);
+  hideToast();
+  if (handler) {
+    handler();
+  }
 }
 
 function shakeElement(element) {
