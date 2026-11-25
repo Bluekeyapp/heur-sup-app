@@ -82,7 +82,7 @@ export function formatFrenchReport({ entries, fullName = "", monthKey }) {
     lines.push(`• ${weekday} ${dayMonth}${COLON}${formatFrenchReportHours(entry.hours)}`);
 
     if (entry.note) {
-      lines.push(`   ↳ ${entry.note}`);
+      lines.push(`   - ${entry.note}`);
     }
   });
 

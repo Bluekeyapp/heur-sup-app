@@ -63,13 +63,13 @@ test("formatFrenchReport produces a simple WhatsApp-readable French report", () 
     "",
     "Détails:",
     "• Mercredi 15/04: 4h",
-    "   ↳ Cleaning up the ground",
+    "   - Cleaning up the ground",
     "",
     "• Lundi 20/04: 1h30",
-    "   ↳ Moving the truck from one location to and other location",
+    "   - Moving the truck from one location to and other location",
     "",
     "• Samedi 25/04: 5h",
-    "   ↳ Moving the dirt from one location to and other"
+    "   - Moving the dirt from one location to and other"
   ].join("\n"));
 });
 
