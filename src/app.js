@@ -1,4 +1,4 @@
-import { TRANSLATIONS } from "./translations.js?v=20261124g";
+import { TRANSLATIONS } from "./translations.js?v=20261124h";
 import {
   buildBackup,
   getStoredFullName,
@@ -12,7 +12,7 @@ import {
   sanitizeEntry,
   setStoredName,
   writeLanguage
-} from "./storage.js?v=20261124g";
+} from "./storage.js?v=20261124h";
 import {
   clampPickerTime,
   copyText,
@@ -24,7 +24,7 @@ import {
   isValidDateValue,
   registerServiceWorker,
   sortEntriesDesc
-} from "./utils.js?v=20261124g";
+} from "./utils.js?v=20261124h";
 
 const SCREEN_INDEX = {
   home: 0,

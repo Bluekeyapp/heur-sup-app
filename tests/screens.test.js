@@ -207,7 +207,7 @@ test("the report sheet shows the French report and manages focus", async (t) => 
   assert.match(report, /Salarié: Ana Silva/);
   assert.match(report, /Période: Novembre 2026/);
   assert.match(report, /Total: 1h30/);
-  assert.match(report, /• Mardi 03\/11: 1h30\n {3}↳ Livraison/);
+  assert.match(report, /• Mardi 03\/11: 1h30\n {3}- Livraison/);
   assert.equal(document.activeElement, $("closeSendButton"));
   assert.equal($("slider").inert, true);
 
