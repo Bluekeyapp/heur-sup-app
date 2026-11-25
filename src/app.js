@@ -1,14 +1,18 @@
-import { TRANSLATIONS } from "./translations.js?v=20261124a";
+import { TRANSLATIONS } from "./translations.js?v=20261124b";
 import {
+  buildBackup,
   getStoredFullName,
   getStoredNameParts,
   loadEntries,
+  mergeEntries,
+  parseBackup,
   persistEntries,
   readLanguage,
+  requestPersistentStorage,
   sanitizeEntry,
   setStoredName,
   writeLanguage
-} from "./storage.js?v=20261124a";
+} from "./storage.js?v=20261124b";
 import {
   clampPickerTime,
   copyText,
@@ -19,7 +23,7 @@ import {
   isValidDateValue,
   registerServiceWorker,
   sortEntriesDesc
-} from "./utils.js?v=20261124a";
+} from "./utils.js?v=20261124b";
 
 const SCREEN_INDEX = {
   home: 0,
@@ -30,12 +34,13 @@ const SCREEN_INDEX = {
 };
 
 const state = {
-  lang: readLanguage(TRANSLATIONS, "en"),
+  lang: readLanguage(TRANSLATIONS, "fr"),
   entries: sortEntriesDesc(loadEntries()),
   selectedMonthKey: getCurrentMonthKey(),
   expandedEntryId: null,
   manageEntriesOpen: false,
   sendSheetOpen: false,
+  nameOverlayOpen: false,
   currentScreen: SCREEN_INDEX.home,
   draft: createEmptyDraft(),
   editingEntryId: null,
@@ -70,6 +75,7 @@ const dom = {
   reportBox: document.getElementById("reportBox"),
   saveEntryButton: document.getElementById("saveEntryButton"),
   toast: document.getElementById("toast"),
+  importFileInput: document.getElementById("importFileInput"),
   openSendButton: document.getElementById("openSendButton"),
   copyReportButton: document.getElementById("copyReportButton"),
   whatsappReportButton: document.getElementById("whatsappReportButton"),
@@ -79,6 +85,7 @@ const dom = {
 let toastTimer = null;
 const pressHintTimers = new WeakMap();
 let viewportTimer = null;
+let focusBeforeSheet = null;
 
 bindEvents();
 initialize();
@@ -173,6 +180,9 @@ function bindEvents() {
   document.getElementById("backFromHoursButton").addEventListener("click", goBack);
   document.getElementById("backFromNoteButton").addEventListener("click", goBack);
   document.getElementById("backFromConfirmButton").addEventListener("click", goBack);
+  document.getElementById("exportDataButton").addEventListener("click", exportBackup);
+  document.getElementById("importDataButton").addEventListener("click", startImport);
+  dom.importFileInput.addEventListener("change", importBackup);
   dom.closeSendButton.addEventListener("click", closeSendSheet);
   dom.sheetBackdrop.addEventListener("click", closeSendSheet);
 
@@ -240,22 +250,35 @@ function bindPressHint(element, getMessage) {
 
 function initialize() {
   dom.inputDate.max = getLocalDateInputValue(new Date());
+  dom.screenNodes.forEach((screen) => screen.setAttribute("tabindex", "-1"));
   syncSelectedMonth();
   applyLanguage();
   updateHomeNameDisplay();
   goTo(SCREEN_INDEX.home);
   registerServiceWorker();
 
+  if (state.entries.length) {
+    requestPersistentStorage();
+  }
+
   if (getStoredFullName()) {
     dom.nameOverlay.style.display = "none";
+    setNameOverlayOpen(false);
   } else {
     dom.nameOverlay.style.display = "flex";
+    setNameOverlayOpen(true);
     window.setTimeout(() => dom.firstName.focus(), 60);
   }
 }
 
 function translate(key) {
-  return (TRANSLATIONS[state.lang] || TRANSLATIONS.en)[key] || key;
+  return (TRANSLATIONS[state.lang] || TRANSLATIONS.fr)[key] || key;
+}
+
+function translateCount(key, count) {
+  const translations = TRANSLATIONS[state.lang] || TRANSLATIONS.fr;
+  const pluralKey = count === 1 && translations[`${key}_one`] ? `${key}_one` : key;
+  return translate(pluralKey).replace("{count}", String(count));
 }
 
 function isEditingEntry() {
@@ -315,7 +338,7 @@ function updateFlowCopy() {
 }
 
 function selectLanguage(languageCode) {
-  state.lang = Object.prototype.hasOwnProperty.call(TRANSLATIONS, languageCode) ? languageCode : "en";
+  state.lang = Object.prototype.hasOwnProperty.call(TRANSLATIONS, languageCode) ? languageCode : "fr";
   writeLanguage(state.lang);
   applyLanguage();
 }
@@ -338,8 +361,28 @@ function goTo(index) {
   dom.slider.style.transform = `translateX(-${index * 100}vw)`;
 
   dom.screenNodes.forEach((screen, screenIndex) => {
-    screen.setAttribute("aria-hidden", String(screenIndex !== index));
+    const hidden = screenIndex !== index;
+    screen.inert = hidden;
+    screen.setAttribute("aria-hidden", String(hidden));
   });
+
+  // Focus left on a button of the screen we just hid would be lost, so move
+  // it to the new screen. Screens that focus an input do so on their own.
+  const active = document.activeElement;
+  if (!active || active === document.body || active.closest("[inert]")) {
+    dom.screenNodes[index].focus({ preventScroll: true });
+  }
+}
+
+// Content behind a dialog must not be reachable with Tab or by screen readers.
+function updateBackgroundInert() {
+  dom.slider.inert = state.nameOverlayOpen || state.sendSheetOpen;
+}
+
+function setNameOverlayOpen(open) {
+  state.nameOverlayOpen = open;
+  dom.nameOverlay.inert = !open;
+  updateBackgroundInert();
 }
 
 function goBack() {
@@ -523,6 +566,7 @@ function saveEntry() {
   state.selectedMonthKey = getEntryMonthKey(entry);
   state.expandedEntryId = entry.id;
   persistEntries(state.entries);
+  requestPersistentStorage();
   renderHome();
   showToast(translate(editing ? "updated" : "saved"));
   resetEntryFlowState();
@@ -707,10 +751,14 @@ function openSend() {
   }
 
   renderReport();
+  focusBeforeSheet = document.activeElement;
   state.sendSheetOpen = true;
   document.body.classList.add("sheet-open");
   dom.sheetBackdrop.setAttribute("aria-hidden", "false");
   dom.sendSheet.setAttribute("aria-hidden", "false");
+  dom.sendSheet.inert = false;
+  updateBackgroundInert();
+  dom.closeSendButton.focus({ preventScroll: true });
 }
 
 function closeSendSheet() {
@@ -722,6 +770,13 @@ function closeSendSheet() {
   document.body.classList.remove("sheet-open");
   dom.sheetBackdrop.setAttribute("aria-hidden", "true");
   dom.sendSheet.setAttribute("aria-hidden", "true");
+  dom.sendSheet.inert = true;
+  updateBackgroundInert();
+
+  if (focusBeforeSheet?.isConnected && !focusBeforeSheet.closest("[inert]")) {
+    focusBeforeSheet.focus({ preventScroll: true });
+  }
+  focusBeforeSheet = null;
 }
 
 function cancelEntryFlow() {
@@ -751,9 +806,7 @@ async function copyReport() {
   }
 
   const copied = await copyText(buildReport());
-  if (copied) {
-    showToast(translate("copied"));
-  }
+  showToast(translate(copied ? "copied" : "copy_failed"));
 }
 
 function openWhatsAppReport() {
@@ -791,6 +844,7 @@ function openNameOverlay() {
   dom.lastName.value = lastName;
   updateLanguageButtons();
   dom.nameOverlay.style.display = "flex";
+  setNameOverlayOpen(true);
 
   requestAnimationFrame(() => {
     dom.nameOverlay.classList.remove("hide");
@@ -812,6 +866,8 @@ function submitName() {
   setStoredName(firstName, lastName);
   updateHomeNameDisplay();
   dom.nameOverlay.classList.add("hide");
+  setNameOverlayOpen(false);
+  dom.screenNodes[state.currentScreen].focus({ preventScroll: true });
 
   window.setTimeout(() => {
     dom.nameOverlay.style.display = "none";
@@ -833,4 +889,78 @@ function handleViewportChange() {
       renderReport();
     }
   }, 80);
+}
+
+async function exportBackup() {
+  const { firstName, lastName } = getStoredNameParts();
+  const backup = buildBackup({ entries: state.entries, firstName, lastName });
+  const fileName = `heures-sup-${getLocalDateInputValue(new Date())}.json`;
+  const file = new File([JSON.stringify(backup, null, 2)], fileName, { type: "application/json" });
+
+  // On phones the share sheet lets the user save to Files or Drive, or send
+  // the file to themselves; desktop browsers get a plain download.
+  const preferShare = window.matchMedia("(pointer: coarse)").matches;
+  if (preferShare && navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: fileName });
+      showToast(translate("exported"));
+      return;
+    } catch (error) {
+      if (error.name === "AbortError") {
+        return;
+      }
+      console.warn("Share failed, falling back to download:", error);
+    }
+  }
+
+  const url = URL.createObjectURL(file);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast(translate("exported"));
+}
+
+function startImport() {
+  dom.importFileInput.value = "";
+  dom.importFileInput.click();
+}
+
+async function importBackup() {
+  const file = dom.importFileInput.files?.[0];
+  if (!file) {
+    return;
+  }
+
+  let backup;
+  try {
+    backup = parseBackup(await file.text());
+  } catch (error) {
+    console.warn("Could not import backup:", error);
+    showToast(translate("import_error"));
+    return;
+  }
+
+  const { entries, addedCount } = mergeEntries(state.entries, backup.entries);
+  if (addedCount) {
+    if (!window.confirm(translateCount("import_confirm", addedCount))) {
+      return;
+    }
+    state.entries = sortEntriesDesc(entries);
+    persistEntries(state.entries);
+    requestPersistentStorage();
+    renderHome();
+    showToast(translateCount("imported", addedCount));
+  } else {
+    showToast(translate("import_nothing_new"));
+  }
+
+  // Restoring on a new device: fill in the name too if none was typed yet.
+  if (!dom.firstName.value.trim() && !dom.lastName.value.trim()) {
+    dom.firstName.value = backup.firstName;
+    dom.lastName.value = backup.lastName;
+  }
 }
