@@ -1,14 +1,14 @@
-const CACHE_NAME = "heures-supplementaires-v46";
+const CACHE_NAME = "heures-supplementaires-v47";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./index.html?v=20261124h",
-  "./styles/app.css?v=20261124h",
-  "./src/app.js?v=20261124h",
-  "./src/translations.js?v=20261124h",
-  "./src/storage.js?v=20261124h",
-  "./src/utils.js?v=20261124h",
-  "./manifest.webmanifest?v=20261124h",
+  "./index.html?v=20261125a",
+  "./styles/app.css?v=20261125a",
+  "./src/app.js?v=20261125a",
+  "./src/translations.js?v=20261125a",
+  "./src/storage.js?v=20261125a",
+  "./src/utils.js?v=20261125a",
+  "./manifest.webmanifest?v=20261125a",
   "./assets/fonts/inter-latin.woff2",
   "./assets/icon.svg",
   "./assets/icon-maskable.svg",
